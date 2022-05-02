@@ -1,21 +1,9 @@
 import React from "react";
-import styled from "@emotion/styled";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
-import CardContent from "@mui/material/CardContent";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
-import type { Identifier, XYCoord } from "dnd-core";
-
-type DropEffect = {
-  dropEffect: string;
-  name: string;
-};
+import { DndProvider } from "react-dnd";
+import Column from "./column";
+import Item from "./item";
 
 interface ItemType {
   id: number;
@@ -24,195 +12,6 @@ interface ItemType {
   user: string;
   date: string;
   column: string;
-}
-
-interface ItemProps {
-  title: string;
-  label: string;
-  user: string;
-  date: string;
-  id: number;
-  index: number;
-  column: string;
-  boardDispatch: React.Dispatch<BoardAction>;
-}
-
-interface DragItem {
-  index: number;
-  id: string;
-  type: string;
-}
-
-function Item({
-  title,
-  label,
-  user,
-  date,
-  id,
-  index,
-  column,
-  boardDispatch,
-}: ItemProps) {
-  // console.log({title, index})
-  const ref = React.useRef<HTMLDivElement>(null);
-  const [, drop] = useDrop({
-    accept: "Our first type",
-    hover(item: DragItem, monitor) {
-      if (!ref.current) {
-        return;
-      }
-      const dragIndex = item.index;
-      const hoverIndex = index;
-
-      // Don't replace items with themselves
-      if (dragIndex === hoverIndex) {
-        return;
-      }
-
-      // Determine rectangle on screen
-      const hoverBoundingRect = ref.current?.getBoundingClientRect();
-
-      // Get vertical middle
-      const hoverMiddleY =
-        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-      // Determine mouse position
-      const clientOffset = monitor.getClientOffset();
-
-      // Get pixels to the top
-      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
-
-      // Only perform the move when the mouse has crossed half of the items height
-      // When dragging downwards, only move when the cursor is below 50%
-      // When dragging upwards, only move when the cursor is above 50%
-
-      // Dragging downwards
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return;
-      }
-
-      // Dragging upwards
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-        return;
-      }
-      // console.log({ dragIndex, hoverIndex, id });
-      // Time to actually perform the action
-      // moveCardHandler(dragIndex, hoverIndex, column);
-      boardDispatch({
-        type: "SHUFFLE",
-        payload: {
-          dragIndex: dragIndex,
-          hoverIndex: hoverIndex,
-          column: column,
-        },
-      });
-
-      // Note: we're mutating the monitor item here!
-      // Generally it's better to avoid mutations,
-      // but it's good here for the sake of performance
-      // to avoid expensive index searches.
-      item.index = hoverIndex;
-    },
-  });
-
-  const [{ isDragging }, drag] = useDrag({
-    type: "Our first type",
-    item: { id: id, currentColumn: column },
-    end: (_, monitor) => {
-      const dropResult = monitor.getDropResult() as DropEffect;
-      if (dropResult && dropResult.name) {
-        boardDispatch({
-          type: "MOVE",
-          payload: { from: column, to: dropResult.name, id: id },
-        });
-      }
-    },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  });
-
-  const opacity = isDragging ? 0.4 : 1;
-
-  drag(drop(ref));
-  const card = (
-    <React.Fragment>
-      <CardContent ref={ref} sx={{ opacity: opacity, background: "white" }}>
-        <Typography variant="h6" component="div">
-          {title}
-        </Typography>
-        <Typography>{user}</Typography>
-        <Typography sx={{ fontSize: 14 }} color="text.secondary">
-          {label}
-        </Typography>
-
-        <Typography sx={{ fontSize: 14 }} color="text.secondary">
-          {date}
-        </Typography>
-      </CardContent>
-      {/* <CardActions>
-      </CardActions> */}
-    </React.Fragment>
-  );
-  return (
-    <Box ref={drag} sx={{ maxWidth: 170 }}>
-      <Card variant="outlined">{card}</Card>
-    </Box>
-  );
-}
-
-interface ColumnProps {
-  title: string;
-  children?: JSX.Element[];
-}
-function Column({ children, title }: ColumnProps) {
-  const [{ canDrop, isOver }, drop] = useDrop({
-    accept: "Our first type",
-    drop: () => ({ name: title }),
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-      canDrop: monitor.canDrop(),
-    }),
-    canDrop: (item: { id: number; currentColumn: string }) => {
-      const { currentColumn } = item;
-      return (
-        currentColumn === title ||
-        (currentColumn === "Backlog" && title == "In Progress") ||
-        (currentColumn === "In Progress" &&
-          (title === "Blocked" ||
-            title === "In Review" ||
-            title === "Backlog")) ||
-        (currentColumn === "In Review" &&
-          (title === "Complete" || title === "Blocked"))
-      );
-    },
-  });
-
-  const getBackgroundColor = () => {
-    if (isOver) {
-      if (canDrop) {
-        return "yellow";
-      } else if (!canDrop) {
-        return "purple";
-      }
-    }
-  };
-  return (
-    <Paper
-      ref={drop}
-      sx={{ minHeight: "80vh", width: 180, background: getBackgroundColor() }}
-    >
-      <Box sx={{ textAlign: "center", mb: 2 }}>
-        <Typography variant="h6">{title}</Typography>
-      </Box>
-
-      <Box
-        sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
-      >
-        {children}
-      </Box>
-    </Paper>
-  );
 }
 
 export const COLUMN_NAMES = {
@@ -229,7 +28,7 @@ interface BoardState {
   "In Progress": ItemType[];
 }
 
-type BoardAction =
+export type BoardAction =
   | {
       type: "MOVE";
       payload: { from: string; to: string; id: number };
@@ -237,15 +36,26 @@ type BoardAction =
   | {
       type: "SHUFFLE";
       payload: { dragIndex: number; hoverIndex: number; column: string };
+    }
+  | {
+      type: "INITIALIZE";
+      payload: { items: ItemType[] };
     };
+
+const baseState: BoardState = {
+  Backlog: [],
+  "In Progress": [],
+  Blocked: [],
+  "In Review": [],
+  Complete: [],
+};
 
 const boardReducer = (state: BoardState, action: BoardAction) => {
   const { type, payload } = action;
   switch (type) {
     case "MOVE":
+      console.log('move')
       if (payload.to === payload.from) return { ...state };
-      
-      console.log(payload)
 
       const fromSet = [...state[payload.from]];
       const itemIndex = fromSet.findIndex((item) => item.id === payload.id);
@@ -260,6 +70,7 @@ const boardReducer = (state: BoardState, action: BoardAction) => {
 
     case "SHUFFLE":
       const dragItem = state[payload.column][payload.dragIndex];
+      // console.log(dragItem, "DDDDDD")
       if (dragItem) {
         const shuffleSet = [...state[payload.column]];
         const prevItem = shuffleSet.splice(payload.hoverIndex, 1, dragItem);
@@ -269,6 +80,19 @@ const boardReducer = (state: BoardState, action: BoardAction) => {
           [payload.column]: shuffleSet,
         };
       } else return { ...state };
+
+    case "INITIALIZE":
+      const initState = { ...baseState };
+      initDat.forEach((item) => {
+        let currentArray = initState[item.column];
+        const hasId = currentArray.some(
+          (currentItem) => currentItem.id === item.id
+        );
+
+        !hasId && currentArray.push(item);
+      });
+      // console.log(initState);
+      return { ...baseState, Backlog: payload.items };
 
     default:
       return state;
@@ -311,15 +135,36 @@ const initDat: ItemType[] = [
 ];
 
 export default function Board() {
-  const [boardState, boardDispatch] = React.useReducer(boardReducer, {
-    Backlog: initDat,
-    "In Progress": [],
-    Blocked: [],
-    "In Review": [],
-    Complete: [],
-  });
+  const [boardState, boardDispatch] = React.useReducer(boardReducer, baseState);
+
+  React.useEffect(() => {
+    // console.log("fire");
+    boardDispatch({
+      type: "INITIALIZE",
+      payload: {
+        items: initDat,
+      },
+    });
+  }, []);
+
+  const handleShuffle = (
+    dragIndex: number,
+    hoverIndex: number,
+    column: string
+  ) => {
+
+    boardDispatch({
+      type: "SHUFFLE",
+      payload: {
+        dragIndex: dragIndex,
+        hoverIndex: hoverIndex,
+        column: column,
+      },
+    });
+  };
 
   const returnItemsForCol = (colName: string) => {
+    // console.log(boardState[colName])
     return boardState[colName].map((item, idx) => (
       <Item
         key={item.id}
@@ -330,10 +175,12 @@ export default function Board() {
         date={item.date}
         column={item.column}
         boardDispatch={boardDispatch}
+        handleShuffle={handleShuffle}
         index={idx}
       />
     ));
   };
+
   return (
     <Grid sx={{ flexGrow: 1 }} container spacing={3}>
       <DndProvider backend={HTML5Backend}>
