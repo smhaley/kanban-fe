@@ -23,7 +23,9 @@ interface ItemProps {
   handleShuffle: (
     dragIndex: number,
     hoverIndex: number,
-    column: string
+    column: string,
+    id: number,
+    dragItem: { id: number; currentColumn: string }
   ) => void;
 }
 
@@ -45,7 +47,6 @@ export default function Item({
   handleShuffle,
 }: ItemProps) {
   const ref = React.useRef<HTMLDivElement>(null);
-
   const [{ handlerId }, drop] = useDrop<
     DragItem,
     void,
@@ -61,6 +62,7 @@ export default function Item({
       if (!ref.current) {
         return;
       }
+      // console.log(item)
 
       const dragIndex = item.index;
       const hoverIndex = index;
@@ -96,9 +98,14 @@ export default function Item({
       if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
         return;
       }
-      console.log(dragIndex, hoverIndex, column);
-      console.log(item);
-      handleShuffle(dragIndex, hoverIndex, column);
+
+      handleShuffle(
+        dragIndex,
+        hoverIndex,
+        column,
+        id,
+        item as unknown as { id: number; currentColumn: string }
+      );
 
       item.index = hoverIndex;
     },
@@ -109,7 +116,7 @@ export default function Item({
     item: () => {
       return { id: id, currentColumn: column };
     },
-    end: (_, monitor) => {
+    end: (item, monitor) => {
       const dropResult = monitor.getDropResult() as DropEffect;
       if (dropResult && dropResult.name) {
         boardDispatch({
@@ -135,7 +142,7 @@ export default function Item({
       data-handler-id={handlerId}
     >
       <Typography variant="h6" component="div">
-        {title}
+        {title} {index}
       </Typography>
       <Typography>{user}</Typography>
       <Typography sx={{ fontSize: 14 }} color="text.secondary">
