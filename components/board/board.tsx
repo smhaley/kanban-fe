@@ -12,17 +12,19 @@ import {
   DropResult,
 } from "react-beautiful-dnd";
 import Modal from "../modal";
-import { Item } from "../../api/models";
+import { Item, Priority } from "../../api/models";
 import { v4 as uuid } from "uuid";
 // import { getLabels, addLabel } from "../../api/label_service";
 import * as ItemsService from "../../api/item_service";
+import Button from "@mui/material/Button";
+import AddIcon from "@mui/icons-material/Add";
 
 const itemsFromBackend = [
   {
     id: "1",
     content: "First task",
     title: "blah",
-    label: "home",
+    label: "Maintenance",
     user: "shawn",
     updateDateTime: "1/2/22",
     creationDateTime: "1/2/22",
@@ -94,9 +96,11 @@ const instantiateCols = (resp: Item[]) => {
     baseState[item.itemStatus].push(item);
   }
 
-  Object.values(baseState).sort((a: Item, b: Item) => {
-    return a.position - b.position;
-  });
+  Object.values(baseState).forEach((item) =>
+    item.sort((a: Item, b: Item) => {
+      return a.position - b.position;
+    })
+  );
 
   return baseState;
 };
@@ -104,13 +108,6 @@ const instantiateCols = (resp: Item[]) => {
 interface ColType {
   [x: string]: Item[];
 }
-// const columnsFromBackend: ColType = {
-//   Backlog: itemsFromBackend,
-//   "In Progress": [],
-//   Blocked: [],
-//   "In Review": [],
-//   Complete: [],
-// };
 
 const onDragEnd = (
   result: DropResult,
@@ -150,7 +147,6 @@ const onDragEnd = (
     copiedItems.forEach((item, index) => (item.position = index));
     ItemsService.batchPutItems(copiedItems);
   }
-  console.log("fire col updates");
 };
 
 function App() {
@@ -158,7 +154,6 @@ function App() {
   const [modalState, setModalState] = useState(false);
 
   React.useEffect(() => {
-    // console.log(getLabels());
     const getItems = async () => {
       try {
         const items = await ItemsService.getItems();
@@ -169,21 +164,18 @@ function App() {
       }
     };
     getItems();
-    // console.log(items);
-
-    // // console.log(
-    // //   fetch("http://localhost:8080/api/v1/label").then((resp) =>
-    // //     console.log(resp)
-    // //   )
-    // // );
-    // let loadTimer = setTimeout(() => setColumns(columnsFromBackend), 100);
-    // return () => {
-    //   clearTimeout(loadTimer);
-    // };
   }, []);
 
   return (
     <>
+      <Box sx={{ mt: -3, maxWidth: 250, top: 0 }}>
+        <Button
+          startIcon={<AddIcon />}
+          onClick={() => setModalState(!modalState)}
+        >
+          New Task
+        </Button>
+      </Box>
       <Grid sx={{ flexGrow: 1 }} container spacing={1}>
         <DragDropContext
           onDragEnd={(result) => onDragEnd(result, setColumns, columns)}
@@ -263,7 +255,23 @@ function App() {
         </DragDropContext>
       </Grid>
       {modalState && (
-        <Modal isOpen={modalState} handleClose={() => setModalState(false)} />
+        <Modal
+          isOpen={modalState}
+          item={{
+            id: "e62b28ab-addb-4144-a54e-951a6c803cc7",
+            label: "Maintenance",
+            user: "user1",
+            content: "some import stuff to do",
+            updateDateTime: "2022-05-05T00:11:49.474547",
+            itemStatus: "BACKLOG",
+            creationDateTime: "2022-05-05T00:11:49.47522",
+            position: 0,
+            priority: Priority.LOW,
+            title: "Import item",
+          }}
+          handleClose={() => setModalState(false)}
+          isNew={false}
+        />
       )}
     </>
   );

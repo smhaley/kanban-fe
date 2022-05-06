@@ -1,3 +1,11 @@
+export enum Priority {
+    LOW = "LOW",
+    STANDARD = "STANDARD",
+    HIGH = "HIGH",
+    CRITICAL = "CRITICAL",
+}
+
+
 export interface User {
   id: number;
   username: string;
@@ -16,7 +24,7 @@ export interface Item {
   updateDateTime: string;
   itemStatus: string;
   creationDateTime: string;
-  priority: string;
+  priority: Priority;
   position: number;
   title: string;
 }
