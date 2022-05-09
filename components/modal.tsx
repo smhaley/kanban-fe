@@ -20,14 +20,25 @@ import MenuItem from "@mui/material/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 import { Divider, Input, Typography } from "@mui/material";
-import { ItemType } from "./board/board";
-import { Item, Priority } from "../api/models";
+import ConfirmationModal from "./confirm-delete";
+import {
+  Item,
+  Priority,
+  ItemStatus,
+  labelPrettify,
+  NewItem,
+} from "../api/models";
+import { isSetIterator } from "util/types";
+import { title } from "process";
 
 interface ModalProps {
-  item: Item;
+  item: Item | NewItem;
   isOpen: boolean;
   isNew: boolean;
-  handleClose: (value: React.SetStateAction<boolean>) => void;
+  addNewItem: (updateItem: NewItem) => void;
+  updateItem: (updateItem: Item) => void;
+  handleClose: () => void;
+  deleteItem: (itemId: string) => void;
 }
 
 const labels = [
@@ -55,62 +66,146 @@ const users = [
   },
 ];
 
-const demo: Item = {
-  id: "e62b28ab-addb-4144-a54e-951a6c803cc7",
-  label: "label",
-  user: "user1",
-  content: "some import stuff to do",
-  updateDateTime: "2022-05-05T00:11:49.474547",
-  itemStatus: "BACKLOG",
-  creationDateTime: "2022-05-05T00:11:49.47522",
-  position: 0,
-  priority: Priority.LOW,
-  title: "Import item",
+interface State {
+  item: Item | NewItem;
+}
+type Action =
+  | { type: "update_label"; payload: string }
+  | { type: "update_title"; payload: string }
+  | { type: "update_user"; payload: string }
+  | { type: "update_priority"; payload: Priority }
+  | { type: "update_content"; payload: string }
+  | { type: "update_status"; payload: ItemStatus };
+
+const itemReducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case "update_label":
+      return {
+        ...state,
+        item: { ...state.item, label: action.payload },
+      };
+    case "update_title":
+      return {
+        item: { ...state.item, title: action.payload },
+      };
+    case "update_user":
+      return {
+        ...state,
+        item: { ...state.item, user: action.payload },
+      };
+    case "update_content":
+      return {
+        ...state,
+        item: { ...state.item, content: action.payload },
+      };
+    case "update_status":
+      return {
+        ...state,
+        item: { ...state.item, itemStatus: action.payload },
+      };
+    case "update_priority":
+      return {
+        ...state,
+        item: { ...state.item, priority: action.payload },
+      };
+  }
 };
+
+const baseError = { title: false, user: false, label: false };
 
 export default function ContentForm({
   item,
   isOpen,
   handleClose,
   isNew,
+  addNewItem,
+  updateItem,
+  deleteItem,
 }: ModalProps) {
-  const [label, setLabel] = React.useState(item ? item.label : labels[0].label);
-  const [user, setUser] = React.useState(item ? item.user : users[0].username);
-  const [priority, setPriority] = React.useState(
-    item ? item.priority : Priority.STANDARD
-  );
-  const [title, setTitle] = React.useState(item ? item.title : undefined);
-  const [content, setContent] = React.useState(item ? item.content : undefined);
+  const [itemState, itemDispatch] = React.useReducer(itemReducer, {
+    item: item,
+  });
+  const [errorState, setErrorState] = React.useState(baseError);
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+
+  const handleSubmit = () => {
+    const { user, title, label } = itemState.item;
+
+    const errors = {
+      title: title.length <= 2,
+      user: user.length <= 2,
+      label: label.length <= 2,
+    };
+
+    setErrorState(errors);
+
+    if (Object.values(errors).some((val) => val === true)) {
+      return;
+    }
+    if (isNew) {
+      addNewItem(itemState.item as NewItem);
+    } else {
+      updateItem(itemState.item as Item);
+    }
+    handleClose();
+  };
+
+  const handleDeleteItem = () => {
+    item.id && deleteItem(item.id);
+    handleClose();
+  };
 
   const handleChange = (
     event:
       | SelectChangeEvent
       | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
       | React.ChangeEvent<HTMLTextAreaElement>,
-    type: "label" | "priority" | "title" | "user" | "content"
+    type: "label" | "priority" | "title" | "user" | "content" | "status"
   ) => {
-    console.log(event.target.value);
     switch (type) {
       case "label":
-        setLabel(event.target.value as string);
+        if (errorState.title || title.length > 2)
+          setErrorState({ ...errorState, label: false });
+        itemDispatch({
+          type: "update_label",
+          payload: event.target.value as string,
+        });
         break;
       case "title":
-        setTitle(
-          (event.target as HTMLInputElement | HTMLTextAreaElement)
-            .value as string
-        );
+        if (errorState.title || title.length > 2)
+          setErrorState({ ...errorState, title: false });
+        itemDispatch({
+          type: "update_title",
+          payload: (event.target as HTMLInputElement | HTMLTextAreaElement)
+            .value as string,
+        });
         break;
       case "user":
-        setUser(event.target.value as string);
+        if (errorState.title || title.length > 2)
+          setErrorState({ ...errorState, user: false });
+        itemDispatch({
+          type: "update_user",
+          payload: event.target.value as string,
+        });
         break;
       case "priority":
-        setPriority(event.target.value as Priority);
+        itemDispatch({
+          type: "update_user",
+          payload: event.target.value as Priority,
+        });
         break;
       case "content":
-        setContent(
-          (event.target as HTMLInputElement | HTMLTextAreaElement)
-            .value as string
-        );
+        itemDispatch({
+          type: "update_content",
+          payload: (event.target as HTMLInputElement | HTMLTextAreaElement)
+            .value as string,
+        });
+        break;
+      case "status":
+        itemDispatch({
+          type: "update_status",
+          payload: event.target.value as ItemStatus,
+        });
         break;
     }
   };
@@ -122,6 +217,31 @@ export default function ContentForm({
     )}`;
   };
 
+  const renderDates = (show: boolean) => {
+    if (
+      show &&
+      (item as Item).updateDateTime &&
+      (item as Item).creationDateTime
+    ) {
+      return (
+        <>
+          <Box sx={{ display: "flex" }}>
+            <Typography color="text.secondary" sx={{ pr: 3 }}>
+              Creation Date:
+            </Typography>
+            <div>{getDate((item as Item).creationDateTime)}</div>
+          </Box>
+          <Box sx={{ display: "flex", pt: 2 }}>
+            <Typography color="text.secondary" sx={{ pr: 4 }}>
+              Last Update:
+            </Typography>
+            <div>{getDate((item as Item).updateDateTime)}</div>
+          </Box>
+        </>
+      );
+    }
+  };
+
   return (
     <Box>
       <Dialog
@@ -130,24 +250,12 @@ export default function ContentForm({
         open={isOpen}
         onClose={handleClose}
       >
-        <DialogTitle>{isNew ? "New Task" : title}</DialogTitle>
+        <DialogTitle>
+          {isNew ? "New Task" : `Update Task: ${item.title}`}
+        </DialogTitle>
         <Divider />
         <DialogContent>
-          <Box sx={{ display: "flex" }}>
-            <Typography color="text.secondary" sx={{ pr: 3 }}>
-              Creation Date:
-            </Typography>
-            <div>{getDate(item.creationDateTime)}</div>
-          </Box>
-          <Box sx={{ display: "flex", pt: 2 }}>
-            <Typography color="text.secondary" sx={{ pr: 4 }}>
-              Last Update:
-            </Typography>
-            <div>
-              <span style={{ margin: 2, background: "pink" }} />
-              {getDate(item.updateDateTime)}
-            </div>
-          </Box>
+          {renderDates(!isNew)}
           <form>
             <Box sx={{ my: 2 }}>
               <TextField
@@ -157,18 +265,23 @@ export default function ContentForm({
                 label="Title"
                 fullWidth
                 variant="standard"
-                value={title}
+                value={itemState.item.title}
+                error={errorState.title}
                 onChange={(e) => handleChange(e, "title")}
               />
+              {errorState.title && (
+                <FormHelperText>Title is required</FormHelperText>
+              )}
             </Box>
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-              <FormControl margin="dense" sx={{ my: 2, mr: 2, width: 200 }}>
+              <FormControl margin="dense" sx={{ my: 2, pr: 1, width: 250 }}>
                 <InputLabel id="demo-simple-select-label">Label</InputLabel>
                 <Select
                   labelId="demo-simple-select-label"
                   id="demo-simple-select"
-                  value={label}
+                  value={itemState.item.label}
                   label="label"
+                  error={errorState.label}
                   onChange={(e) => handleChange(e, "label")}
                 >
                   {labels.map((val) => (
@@ -179,98 +292,100 @@ export default function ContentForm({
                 </Select>
               </FormControl>
 
-              <FormControl margin="dense" sx={{ my: 2, width: 200 }}>
-                <InputLabel id="prioity-select">Priority</InputLabel>
+              <FormControl margin="dense" sx={{ my: 2, pl: 1, width: 250 }}>
+                <InputLabel id="priority-select">Priority</InputLabel>
                 <Select
-                  labelId="prioity-select"
-                  value={priority}
+                  labelId="priority-select"
+                  value={itemState.item.priority}
                   label="Priority"
                   onChange={(e) => handleChange(e, "priority")}
-                  sx={{ textTransform: "capitalize" }}
                 >
                   {Object.keys(Priority).map((val) => (
-                    <MenuItem
-                      key={val}
-                      value={val}
-                      sx={{ textTransform: "capitalize" }}
-                    >
-                      {val.toLowerCase()}
+                    <MenuItem key={val} value={val}>
+                      {labelPrettify(val)}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Box>
-            <FormControl margin="dense" sx={{ my: 2, width: 200 }}>
-              <InputLabel id="user-select">User</InputLabel>
-              <Select
-                labelId="user-select"
-                value={user}
-                label="User"
-                onChange={(e) => handleChange(e, "user")}
-                sx={{ textTransform: "capitalize" }}
-              >
-                {users.map((val) => (
-                  <MenuItem key={val.id} value={val.username}>
-                    {val.username}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <FormControl margin="dense" sx={{ my: 2, pr: 1, width: 250 }}>
+                <InputLabel id="user-select">User</InputLabel>
+                <Select
+                  labelId="user-select"
+                  value={itemState.item.user}
+                  label="User"
+                  error={errorState.user}
+                  onChange={(e) => handleChange(e, "user")}
+                >
+                  {users.map((val) => (
+                    <MenuItem key={val.id} value={val.username}>
+                      {val.username}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl margin="dense" sx={{ my: 2, width: 250, pl: 1 }}>
+                <InputLabel id="status-select">Status</InputLabel>
+                <Select
+                  labelId="status-select"
+                  value={itemState.item.itemStatus}
+                  label="status"
+                  disabled={isNew}
+                  onChange={(e) => handleChange(e, "status")}
+                >
+                  {Object.keys(ItemStatus).map((val) => (
+                    <MenuItem key={val} value={val}>
+                      {labelPrettify(val)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
             <Box sx={{ my: 2 }}>
               <InputLabel id="user-select">Comments</InputLabel>
               <TextareaAutosize
                 aria-label="minimum height"
                 minRows={8}
                 minLength={6}
-                placeholder="Minimum 3 rows"
-                defaultValue={item ? item.content : ""}
+                placeholder="Task details"
                 style={{ width: "100%" }}
-                value={content}
+                value={itemState.item.content}
                 onChange={(e) => handleChange(e, "content")}
               />
             </Box>
           </form>
         </DialogContent>
-        <DialogActions>
-          <Box>
-            <Button onClick={() => handleClose(false)} autoFocus>
-              close
-            </Button>
+        <DialogActions
+          style={{ justifyContent: isNew ? "right" : "space-between" }}
+        >
+          {!isNew && (
             <Button
               variant="contained"
-              onClick={() => handleClose(false)}
+              color="warning"
+              onClick={() => setConfirmDelete(true)}
               autoFocus
             >
+              delete
+            </Button>
+          )}
+          <Box>
+            <Button onClick={() => handleClose()} autoFocus>
+              close
+            </Button>
+            <Button variant="contained" onClick={handleSubmit} autoFocus>
               Save
             </Button>
           </Box>
         </DialogActions>
+        {!isNew && (
+          <ConfirmationModal
+            handleClose={() => setConfirmDelete(false)}
+            isOpen={confirmDelete}
+            handleDelete={handleDeleteItem}
+          />
+        )}
       </Dialog>
     </Box>
   );
 }
-
-// export function FormDialog({ isOpen, handleClose }: ModalProps) {
-//   return (
-//     <div>
-//       <Dialog open={isOpen} onClose={handleClose}>
-//         <DialogTitle>Subscribe</DialogTitle>
-//         <DialogContent>
-//           <DialogContentText>
-//             To subscribe to this website, please enter your email address here.
-//             We will send updates occasionally.
-//           </DialogContentText>
-//           <TextField
-//             autoFocus
-//             margin="dense"
-//             id="name"
-//             label="Email Address"
-//             type="email"
-//             fullWidth
-//             variant="standard"
-//           />
-//         </DialogContent>
-//       </Dialog>
-//     </div>
-//   );
-// }

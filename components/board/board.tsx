@@ -12,65 +12,31 @@ import {
   DropResult,
 } from "react-beautiful-dnd";
 import Modal from "../modal";
-import { Item, Priority } from "../../api/models";
+import {
+  Item,
+  NewItem,
+  Priority,
+  ItemStatus,
+  labelPrettify,
+} from "../../api/models";
 import { v4 as uuid } from "uuid";
 // import { getLabels, addLabel } from "../../api/label_service";
 import * as ItemsService from "../../api/item_service";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 
-const itemsFromBackend = [
-  {
-    id: "1",
-    content: "First task",
-    title: "blah",
-    label: "Maintenance",
-    user: "shawn",
-    updateDateTime: "1/2/22",
-    creationDateTime: "1/2/22",
-    itemStatus: "Backlog",
-  },
-  {
-    id: "2",
-    content: "First task",
-    title: "blah",
-    label: "home",
-    user: "shawn",
-    updateDateTime: "1/2/22",
-    creationDateTime: "1/2/22",
-    itemStatus: "Backlog",
-  },
-  {
-    id: "3",
-    content: "First task",
-    title: "blah",
-    label: "home",
-    user: "shawn",
-    updateDateTime: "1/2/22",
-    creationDateTime: "1/2/22",
-    itemStatus: "Backlog",
-  },
-  {
-    id: "4",
-    content: "First task",
-    title: "blah",
-    label: "home",
-    user: "shawn",
-    updateDateTime: "1/2/22",
-    creationDateTime: "1/2/22",
-    itemStatus: "Backlog",
-  },
-  {
-    id: "5",
-    content: "First task",
-    title: "blah",
-    label: "home",
-    user: "shawn",
-    updateDateTime: "1/2/22",
-    creationDateTime: "1/2/22",
-    itemStatus: "Backlog",
-  },
-];
+const emptyItem: Item = {
+  id: "",
+  content: "",
+  title: "",
+  label: "",
+  user: "",
+  updateDateTime: "",
+  creationDateTime: "",
+  itemStatus: ItemStatus.BACKLOG,
+  priority: Priority.STANDARD,
+  position: 999,
+};
 
 export interface ItemType {
   id: string;
@@ -84,13 +50,9 @@ export interface ItemType {
 }
 
 const instantiateCols = (resp: Item[]) => {
-  const baseState: ColType = {
-    BACKLOG: [],
-    IN_PROGRESS: [],
-    BLOCKED: [],
-    IN_REVIEW: [],
-    COMPLETE: [],
-  };
+  const baseState: ColType = Object.keys(ItemStatus).reduce((acc, curr) => {
+    return { ...acc, [curr]: [] };
+  }, {});
 
   for (let item of resp) {
     baseState[item.itemStatus].push(item);
@@ -123,7 +85,7 @@ const onDragEnd = (
     const sourceItems = [...sourceColumn];
     const destItems = [...destColumn];
     const [removed] = sourceItems.splice(source.index, 1);
-    removed.itemStatus = destination.droppableId;
+    removed.itemStatus = destination.droppableId as ItemStatus;
     destItems.splice(destination.index, 0, removed);
     setColumns({
       ...columns,
@@ -151,14 +113,16 @@ const onDragEnd = (
 
 function App() {
   const [columns, setColumns] = useState<ColType>();
+  const [items, setItems] = useState<Item[]>();
   const [modalState, setModalState] = useState(false);
+  const [isNew, setIsNew] = useState(false);
+  const [currentItem, setCurrentItem] = useState<Item | NewItem>(emptyItem);
 
   React.useEffect(() => {
     const getItems = async () => {
       try {
         const items = await ItemsService.getItems();
-        const columns = instantiateCols(items);
-        setColumns(columns);
+        setItems(items);
       } catch (error) {
         console.log(error);
       }
@@ -166,13 +130,56 @@ function App() {
     getItems();
   }, []);
 
+  React.useEffect(() => {
+    if (items) {
+      const columns = instantiateCols(items);
+      setColumns(columns);
+    }
+  }, [items]);
+
+  const handleUpdateItem = (updateItem: Item) => {
+    if (!items || items.length < 1) return;
+    const filteredItems = items.filter((val) => val.id !== updateItem.id);
+    setItems([...filteredItems, updateItem]);
+  };
+
+  const handleNewItem = async (item: NewItem) => {
+    const currentItems = items ? [...items] : [];
+    const newItem = (await ItemsService.postItems(item)) as Item;
+    setItems([...currentItems, newItem]);
+    setCurrentItem(emptyItem);
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    const currentItems = items ? [...items] : [];
+    const filteredItems = currentItems.filter((item) => item.id !== itemId);
+    setItems([...filteredItems]);
+    setCurrentItem(emptyItem);
+
+  };
+
+  const newItemModal = () => {
+    setIsNew(true);
+    setModalState(!modalState);
+  };
+
+  const modalClose = () => {
+    setCurrentItem(emptyItem);
+    setModalState(false);
+  };
+
+  const updateItemModal = (itemId: string) => {
+    if (!items || items.length < 1) return;
+    setIsNew(false);
+    setModalState(!modalState);
+    const itemToUpdate = items.filter((item) => item.id === itemId)[0];
+    setCurrentItem(itemToUpdate);
+  };
+
   return (
     <>
       <Box sx={{ mt: -3, maxWidth: 250, top: 0 }}>
-        <Button
-          startIcon={<AddIcon />}
-          onClick={() => setModalState(!modalState)}
-        >
+        <Button startIcon={<AddIcon />} onClick={newItemModal}>
           New Task
         </Button>
       </Box>
@@ -181,14 +188,16 @@ function App() {
           onDragEnd={(result) => onDragEnd(result, setColumns, columns)}
         >
           {columns &&
-            Object.entries(columns).map(([columnId, column], index) => {
+            Object.entries(columns).map(([columnId, column]) => {
               return (
                 <Droppable droppableId={columnId} key={columnId}>
                   {(provided, snapshot) => {
                     return (
                       <Grid item>
                         <Box sx={{ textAlign: "center", mb: 1, pt: 1 }}>
-                          <Typography variant="h6">{columnId}</Typography>
+                          <Typography variant="h6">
+                            {labelPrettify(columnId)}
+                          </Typography>
                         </Box>
                         <Paper
                           {...provided.droppableProps}
@@ -224,7 +233,7 @@ function App() {
                                           : "#fffefe",
                                         ...provided.draggableProps.style,
                                       }}
-                                      onClick={() => setModalState(!modalState)}
+                                      onClick={() => updateItemModal(item.id)}
                                     >
                                       <CardContent>
                                         <Typography variant="h6">
@@ -257,20 +266,12 @@ function App() {
       {modalState && (
         <Modal
           isOpen={modalState}
-          item={{
-            id: "e62b28ab-addb-4144-a54e-951a6c803cc7",
-            label: "Maintenance",
-            user: "user1",
-            content: "some import stuff to do",
-            updateDateTime: "2022-05-05T00:11:49.474547",
-            itemStatus: "BACKLOG",
-            creationDateTime: "2022-05-05T00:11:49.47522",
-            position: 0,
-            priority: Priority.LOW,
-            title: "Import item",
-          }}
-          handleClose={() => setModalState(false)}
-          isNew={false}
+          item={currentItem}
+          handleClose={modalClose}
+          addNewItem={handleNewItem}
+          updateItem={handleUpdateItem}
+          isNew={isNew}
+          deleteItem={handleDeleteItem}
         />
       )}
     </>
