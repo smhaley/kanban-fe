@@ -1,15 +1,15 @@
 import { get, post, put, del } from "./api";
-import { Item, NewItem } from "./models";
+import { Item } from "./models";
 
 export const getItems = () => {
-  return get<Item[]>("/kanbanItem");
+  return get<Item[]>("/kanbanItems");
 };
 
 export const batchPutItems = (data: Item[]) => {
-  return put("/kanbanItem", data);
+  return put("/kanbanItems", data);
 };
 
-export const postItems = (data: NewItem) => {
+export const postItems = (data: Item) => {
   return post("/kanbanItem", data);
 };
 

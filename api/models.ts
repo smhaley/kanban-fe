@@ -13,16 +13,6 @@ export enum ItemStatus {
   COMPLETE = "COMPLETE",
 }
 
-export const labelPrettify = (val: string) => {
-  return val
-    .toLowerCase()
-    .split("_")
-    .map((word) => {
-      return word[0].toUpperCase() + word.slice(1);
-    })
-    .join(" ");
-};
-
 export interface User {
   id: number;
   username: string;
@@ -33,7 +23,7 @@ export interface Label {
   label: string;
 }
 
-export interface NewItem {
+export interface Item {
   label: string;
   user: string;
   content: string;
@@ -45,11 +35,3 @@ export interface NewItem {
   updateDateTime: string;
   creationDateTime: string;
 }
-
-export interface Item extends NewItem {
-  id: string;
-  updateDateTime: string;
-  creationDateTime: string;
-}
-
-// for post make id, and times nullable; position is needed

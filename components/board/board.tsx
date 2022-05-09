@@ -5,38 +5,18 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import React, { useState } from "react";
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  DropResult,
-} from "react-beautiful-dnd";
-import Modal from "../modal";
-import {
-  Item,
-  NewItem,
-  Priority,
-  ItemStatus,
-  labelPrettify,
-} from "../../api/models";
-import { v4 as uuid } from "uuid";
-// import { getLabels, addLabel } from "../../api/label_service";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import Modal from "./modal";
+import { Item } from "../../api/models";
 import * as ItemsService from "../../api/item_service";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
-
-const emptyItem: Item = {
-  id: "",
-  content: "",
-  title: "",
-  label: "",
-  user: "",
-  updateDateTime: "",
-  creationDateTime: "",
-  itemStatus: ItemStatus.BACKLOG,
-  priority: Priority.STANDARD,
-  position: 999,
-};
+import { emptyItem } from "../../constants/board-constants";
+import {
+  labelPrettify,
+  instantiateCols,
+  onDragEnd,
+} from "../../utils/board-utils";
 
 export interface ItemType {
   id: string;
@@ -49,74 +29,16 @@ export interface ItemType {
   creationDateTime: string;
 }
 
-const instantiateCols = (resp: Item[]) => {
-  const baseState: ColType = Object.keys(ItemStatus).reduce((acc, curr) => {
-    return { ...acc, [curr]: [] };
-  }, {});
-
-  for (let item of resp) {
-    baseState[item.itemStatus].push(item);
-  }
-
-  Object.values(baseState).forEach((item) =>
-    item.sort((a: Item, b: Item) => {
-      return a.position - b.position;
-    })
-  );
-
-  return baseState;
-};
-
-interface ColType {
+export interface ColType {
   [x: string]: Item[];
 }
-
-const onDragEnd = (
-  result: DropResult,
-  setColumns: React.Dispatch<React.SetStateAction<ColType | undefined>>,
-  columns?: ColType
-) => {
-  if (!columns) return;
-  if (!result.destination) return;
-  const { source, destination } = result;
-  if (source.droppableId !== destination.droppableId) {
-    const sourceColumn = columns[source.droppableId];
-    const destColumn = columns[destination.droppableId];
-    const sourceItems = [...sourceColumn];
-    const destItems = [...destColumn];
-    const [removed] = sourceItems.splice(source.index, 1);
-    removed.itemStatus = destination.droppableId as ItemStatus;
-    destItems.splice(destination.index, 0, removed);
-    setColumns({
-      ...columns,
-      [source.droppableId]: sourceItems,
-      [destination.droppableId]: destItems,
-    });
-    destItems.forEach((item, index) => (item.position = index));
-    destItems.forEach((item, index) => (item.position = index));
-    ItemsService.batchPutItems([...sourceItems, ...destItems]);
-  } else {
-    const column = columns[source.droppableId];
-    const copiedItems = [...column];
-
-    const [removed] = copiedItems.splice(source.index, 1);
-
-    copiedItems.splice(destination.index, 0, removed);
-    setColumns({
-      ...columns,
-      [source.droppableId]: copiedItems,
-    });
-    copiedItems.forEach((item, index) => (item.position = index));
-    ItemsService.batchPutItems(copiedItems);
-  }
-};
 
 function App() {
   const [columns, setColumns] = useState<ColType>();
   const [items, setItems] = useState<Item[]>();
   const [modalState, setModalState] = useState(false);
   const [isNew, setIsNew] = useState(false);
-  const [currentItem, setCurrentItem] = useState<Item | NewItem>(emptyItem);
+  const [currentItem, setCurrentItem] = useState<Item>(emptyItem);
 
   React.useEffect(() => {
     const getItems = async () => {
@@ -137,25 +59,28 @@ function App() {
     }
   }, [items]);
 
-  const handleUpdateItem = (updateItem: Item) => {
+  const handleUpdateItem = async (updateItem: Item) => {
     if (!items || items.length < 1) return;
     const filteredItems = items.filter((val) => val.id !== updateItem.id);
-    setItems([...filteredItems, updateItem]);
+    const updatedItem = await ItemsService.updateItem(updateItem);
+    setItems([...filteredItems, updatedItem]);
   };
 
-  const handleNewItem = async (item: NewItem) => {
+  const handleNewItem = async (item: Item) => {
     const currentItems = items ? [...items] : [];
-    const newItem = (await ItemsService.postItems(item)) as Item;
+    const position = columns ? columns.BACKLOG.length : 0;
+    item.position = position;
+    const newItem = await ItemsService.postItems(item);
     setItems([...currentItems, newItem]);
     setCurrentItem(emptyItem);
   };
 
-  const handleDeleteItem = (itemId: string) => {
+  const handleDeleteItem = async (itemId: string) => {
     const currentItems = items ? [...items] : [];
     const filteredItems = currentItems.filter((item) => item.id !== itemId);
+    await ItemsService.deleteItem(itemId);
     setItems([...filteredItems]);
     setCurrentItem(emptyItem);
-
   };
 
   const newItemModal = () => {

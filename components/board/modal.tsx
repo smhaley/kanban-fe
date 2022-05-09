@@ -4,38 +4,24 @@ import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
-import FormGroup from "@mui/material/FormGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
-import Switch from "@mui/material/Switch";
-import RadioGroup from "@mui/material/RadioGroup";
-import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
-import { Divider, Input, Typography } from "@mui/material";
-import ConfirmationModal from "./board/confirm-delete";
-import {
-  Item,
-  Priority,
-  ItemStatus,
-  labelPrettify,
-  NewItem,
-} from "../api/models";
-import { isSetIterator } from "util/types";
-import { title } from "process";
+import { Divider, Typography } from "@mui/material";
+import ConfirmationModal from "./confirm-delete";
+import { Item, Priority, ItemStatus } from "../../api/models";
+import { labelPrettify } from "../../utils/board-utils";
 
 interface ModalProps {
-  item: Item | NewItem;
+  item: Item;
   isOpen: boolean;
   isNew: boolean;
-  addNewItem: (updateItem: NewItem) => void;
+  addNewItem: (updateItem: Item) => void;
   updateItem: (updateItem: Item) => void;
   handleClose: () => void;
   deleteItem: (itemId: string) => void;
@@ -67,7 +53,7 @@ const users = [
 ];
 
 interface State {
-  item: Item | NewItem;
+  item: Item;
 }
 type Action =
   | { type: "update_label"; payload: string }
@@ -143,9 +129,9 @@ export default function ContentForm({
       return;
     }
     if (isNew) {
-      addNewItem(itemState.item as NewItem);
+      addNewItem(itemState.item);
     } else {
-      updateItem(itemState.item as Item);
+      updateItem(itemState.item);
     }
     handleClose();
   };
@@ -164,28 +150,31 @@ export default function ContentForm({
   ) => {
     switch (type) {
       case "label":
-        if (errorState.title || title.length > 2)
+        const label = event.target.value as string;
+        if (errorState.label && label.length > 2)
           setErrorState({ ...errorState, label: false });
         itemDispatch({
           type: "update_label",
-          payload: event.target.value as string,
+          payload: label,
         });
         break;
       case "title":
-        if (errorState.title || title.length > 2)
+        const title = (event.target as HTMLInputElement | HTMLTextAreaElement)
+          .value as string;
+        if (errorState.title && title.length > 2)
           setErrorState({ ...errorState, title: false });
         itemDispatch({
           type: "update_title",
-          payload: (event.target as HTMLInputElement | HTMLTextAreaElement)
-            .value as string,
+          payload: title,
         });
         break;
       case "user":
-        if (errorState.title || title.length > 2)
+        const user = event.target.value as string;
+        if (errorState.user && user.length > 2)
           setErrorState({ ...errorState, user: false });
         itemDispatch({
           type: "update_user",
-          payload: event.target.value as string,
+          payload: user,
         });
         break;
       case "priority":
@@ -218,26 +207,22 @@ export default function ContentForm({
   };
 
   const renderDates = (show: boolean) => {
-    if (
-      show &&
-      (item as Item).updateDateTime &&
-      (item as Item).creationDateTime
-    ) {
+    if (show && item.updateDateTime && item.creationDateTime) {
       return (
-        <>
+        <Box sx={{ my: 2 }}>
           <Box sx={{ display: "flex" }}>
             <Typography color="text.secondary" sx={{ pr: 3 }}>
               Creation Date:
             </Typography>
-            <div>{getDate((item as Item).creationDateTime)}</div>
+            <div>{getDate(item.creationDateTime)}</div>
           </Box>
           <Box sx={{ display: "flex", pt: 2 }}>
             <Typography color="text.secondary" sx={{ pr: 4 }}>
               Last Update:
             </Typography>
-            <div>{getDate((item as Item).updateDateTime)}</div>
+            <div>{getDate(item.updateDateTime)}</div>
           </Box>
-        </>
+        </Box>
       );
     }
   };
@@ -257,7 +242,7 @@ export default function ContentForm({
         <DialogContent>
           {renderDates(!isNew)}
           <form>
-            <Box sx={{ my: 2 }}>
+            <Box sx={{ mb: 2 }}>
               <TextField
                 autoFocus
                 margin="dense"
