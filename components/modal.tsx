@@ -4,38 +4,25 @@ import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
-import FormGroup from "@mui/material/FormGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
-import Switch from "@mui/material/Switch";
-import RadioGroup from "@mui/material/RadioGroup";
-import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
-import { Divider, Input, Typography } from "@mui/material";
+import { Divider, Typography } from "@mui/material";
 import ConfirmationModal from "./board/confirm-delete";
-import {
-  Item,
-  Priority,
-  ItemStatus,
-  labelPrettify,
-  NewItem,
-} from "../api/models";
-import { isSetIterator } from "util/types";
+import { Item, Priority, ItemStatus } from "../api/models";
+import { labelPrettify } from "../utils/board-utils";
 import { title } from "process";
 
 interface ModalProps {
-  item: Item | NewItem;
+  item: Item;
   isOpen: boolean;
   isNew: boolean;
-  addNewItem: (updateItem: NewItem) => void;
+  addNewItem: (updateItem: Item) => void;
   updateItem: (updateItem: Item) => void;
   handleClose: () => void;
   deleteItem: (itemId: string) => void;
@@ -67,7 +54,7 @@ const users = [
 ];
 
 interface State {
-  item: Item | NewItem;
+  item: Item;
 }
 type Action =
   | { type: "update_label"; payload: string }
@@ -143,9 +130,9 @@ export default function ContentForm({
       return;
     }
     if (isNew) {
-      addNewItem(itemState.item as NewItem);
+      addNewItem(itemState.item);
     } else {
-      updateItem(itemState.item as Item);
+      updateItem(itemState.item);
     }
     handleClose();
   };
