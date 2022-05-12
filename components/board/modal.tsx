@@ -95,10 +95,11 @@ export default function ContentForm({
   const [errorState, setErrorState] = React.useState(baseError);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
-  const isComplete = itemState.item.itemStatus === ItemStatus.COMPLETE;
-  const modalItemStates = Object.values(ItemStatus).filter(
-    (status) => ![ItemStatus.COMPLETE, ItemStatus.ARCHIVE].includes(status)
+  const isComplete = item.itemStatus === ItemStatus.COMPLETE;
+  const modalItemStatus = Object.values(ItemStatus).filter(
+    (status) => status !== ItemStatus.ARCHIVE
   );
+
   const handleSubmit = () => {
     const { user, title, label } = itemState.item;
 
@@ -328,7 +329,7 @@ export default function ContentForm({
                   disabled={isNew || isComplete}
                   onChange={(e) => handleChange(e, "status")}
                 >
-                  {modalItemStates.map((val) => (
+                  {modalItemStatus.map((val) => (
                     <MenuItem key={val} value={val}>
                       {labelPrettify(val)}
                     </MenuItem>
