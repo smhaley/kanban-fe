@@ -71,6 +71,13 @@ function App({ labels, users }: BoardProps) {
     setItems([...filteredItems, updatedItem]);
   };
 
+  const handleArchive = async (archiveItem: Item) => {
+    if (!items || items.length < 1) return;
+    const filteredItems = items.filter((val) => val.id !== archiveItem.id);
+    await ItemsService.updateItem(archiveItem);
+    setItems([...filteredItems]);
+  };
+
   const handleNewItem = async (item: Item) => {
     const currentItems = items ? [...items] : [];
     const position = columns ? columns.BACKLOG.length : 0;
@@ -200,6 +207,7 @@ function App({ labels, users }: BoardProps) {
           handleClose={modalClose}
           addNewItem={handleNewItem}
           updateItem={handleUpdateItem}
+          archiveItem={handleArchive}
           isNew={isNew}
           deleteItem={handleDeleteItem}
           labels={labels}

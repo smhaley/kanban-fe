@@ -21,8 +21,9 @@ interface ModalProps {
   item: Item;
   isOpen: boolean;
   isNew: boolean;
-  addNewItem: (updateItem: Item) => void;
+  addNewItem: (item: Item) => void;
   updateItem: (updateItem: Item) => void;
+  archiveItem: (archiveItem: Item) => void;
   handleClose: () => void;
   deleteItem: (itemId: string) => void;
   labels: Label[];
@@ -86,6 +87,7 @@ export default function ContentForm({
   deleteItem,
   labels,
   users,
+  archiveItem,
 }: ModalProps) {
   const [itemState, itemDispatch] = React.useReducer(itemReducer, {
     item: item,
@@ -93,6 +95,10 @@ export default function ContentForm({
   const [errorState, setErrorState] = React.useState(baseError);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
+  const isComplete = itemState.item.itemStatus === ItemStatus.COMPLETE;
+  const modalItemStates = Object.values(ItemStatus).filter(
+    (status) => ![ItemStatus.COMPLETE, ItemStatus.ARCHIVE].includes(status)
+  );
   const handleSubmit = () => {
     const { user, title, label } = itemState.item;
 
@@ -107,11 +113,19 @@ export default function ContentForm({
     if (Object.values(errors).some((val) => val === true)) {
       return;
     }
+    const now = new Date(Date.now());
+    const updateTime = now.toISOString();
+
     if (isNew) {
       addNewItem(itemState.item);
+    } else if (isComplete) {
+      const itemToArchive = { ...itemState.item };
+      itemToArchive.updateDateTime = updateTime;
+      itemToArchive.itemStatus = ItemStatus.ARCHIVE;
+      archiveItem(itemToArchive);
     } else {
       const itemToUpdate = { ...itemState.item };
-      itemToUpdate.updateDateTime = Date.now().toString();
+      itemToUpdate.updateDateTime = updateTime;
       updateItem(itemToUpdate);
     }
     handleClose();
@@ -230,6 +244,7 @@ export default function ContentForm({
                 id="name"
                 label="Title"
                 fullWidth
+                disabled={isComplete}
                 variant="standard"
                 value={itemState.item.title}
                 error={errorState.title}
@@ -247,6 +262,7 @@ export default function ContentForm({
                   id="demo-simple-select"
                   value={itemState.item.label}
                   label="label"
+                  disabled={isComplete}
                   error={errorState.label}
                   onChange={(e) => handleChange(e, "label")}
                   style={{ textTransform: "capitalize" }}
@@ -269,6 +285,7 @@ export default function ContentForm({
                   labelId="priority-select"
                   value={itemState.item.priority}
                   label="Priority"
+                  disabled={isComplete}
                   onChange={(e) => handleChange(e, "priority")}
                 >
                   {Object.keys(Priority).map((val) => (
@@ -286,6 +303,7 @@ export default function ContentForm({
                   labelId="user-select"
                   value={itemState.item.user}
                   label="User"
+                  disabled={isComplete}
                   error={errorState.user}
                   onChange={(e) => handleChange(e, "user")}
                   style={{ textTransform: "capitalize" }}
@@ -307,10 +325,10 @@ export default function ContentForm({
                   labelId="status-select"
                   value={itemState.item.itemStatus}
                   label="status"
-                  disabled={isNew}
+                  disabled={isNew || isComplete}
                   onChange={(e) => handleChange(e, "status")}
                 >
-                  {Object.keys(ItemStatus).map((val) => (
+                  {modalItemStates.map((val) => (
                     <MenuItem key={val} value={val}>
                       {labelPrettify(val)}
                     </MenuItem>
@@ -325,6 +343,7 @@ export default function ContentForm({
                 minRows={8}
                 minLength={6}
                 placeholder="Task details"
+                disabled={isComplete}
                 style={{ width: "100%" }}
                 value={itemState.item.content}
                 onChange={(e) => handleChange(e, "content")}
@@ -340,6 +359,7 @@ export default function ContentForm({
               variant="contained"
               color="warning"
               onClick={() => setConfirmDelete(true)}
+              disabled={isComplete}
               autoFocus
             >
               delete
@@ -349,8 +369,13 @@ export default function ContentForm({
             <Button onClick={() => handleClose()} autoFocus>
               close
             </Button>
-            <Button variant="contained" onClick={handleSubmit} autoFocus>
-              Save
+            <Button
+              variant="contained"
+              color={isComplete ? "info" : "primary"}
+              onClick={handleSubmit}
+              autoFocus
+            >
+              {isComplete ? "Archive" : "Save"}
             </Button>
           </Box>
         </DialogActions>

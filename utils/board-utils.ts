@@ -14,7 +14,10 @@ export const labelPrettify = (val: string) => {
 };
 
 export const instantiateCols = (resp: Item[]) => {
-  const baseState: ColType = Object.keys(ItemStatus).reduce((acc, curr) => {
+  const itemCols = Object.keys(ItemStatus).filter(
+    (item) => item !== ItemStatus.ARCHIVE
+  );
+  const baseState: ColType = itemCols.reduce((acc, curr) => {
     return { ...acc, [curr]: [] };
   }, {});
 
@@ -40,12 +43,14 @@ export const onDragEnd = (
   if (!result.destination) return;
   const { source, destination } = result;
   if (source.droppableId !== destination.droppableId) {
+    const now = new Date(Date.now());
     const sourceColumn = columns[source.droppableId];
     const destColumn = columns[destination.droppableId];
     const sourceItems = [...sourceColumn];
     const destItems = [...destColumn];
     const [removed] = sourceItems.splice(source.index, 1);
     removed.itemStatus = destination.droppableId as ItemStatus;
+    removed.updateDateTime = now.toISOString();
     destItems.splice(destination.index, 0, removed);
     setColumns({
       ...columns,

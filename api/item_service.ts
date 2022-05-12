@@ -5,6 +5,15 @@ export const getItems = () => {
   return get<Item[]>("/kanbanItems");
 };
 
+
+export const getItem = (id: string) => {
+  return get<Item[]>(`/kanbanItem/${id}`);
+};
+
+export const getArchivedItems = () => {
+  return get<Item[]>(`/archivedKanbanItems`);
+};
+
 export const batchPutItems = (data: Item[]) => {
   return put("/kanbanItems", data);
 };

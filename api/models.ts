@@ -11,6 +11,7 @@ export enum ItemStatus {
   BLOCKED = "BLOCKED",
   IN_REVIEW = "IN_REVIEW",
   COMPLETE = "COMPLETE",
+  ARCHIVE = "ARCHIVE",
 }
 
 export interface User {
