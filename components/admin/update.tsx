@@ -5,14 +5,9 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
-import { ItemStatus } from "../../api/models";
 import Button from "@mui/material/Button";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
-import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
-import CardContent from "@mui/material/CardContent";
-import CardHeader from "@mui/material/CardHeader";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -74,7 +69,6 @@ export default function Update({
   const [errors, setErrors] = React.useState(baseErrors);
   const [textInput, setTextInput] = React.useState("");
 
-
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     const currentItem = data[0] ? data[0] : undefined;
     setCurrentItem(currentItem);
@@ -97,24 +91,24 @@ export default function Update({
     );
   };
 
-  console.log(textInput);
   const handleAddItem = () => {
-    console.log('add', textInput);
-    // if (textInput || textInput.length < 2) {
-    //   setErrors({ ...errors, text: true });
-    //   return;
-    // }
-    addValue(textInput);
+    if (textInput.length < 2) {
+      setErrors({ ...errors, text: true });
+    } else {
+      addValue(textInput);
+    }
   };
   const handleDeleteItem = () => {
     currentItem && deleteValue(currentItem.id);
   };
   const handleUpdateItem = () => {
-    if (textInput || textInput.length < 2) {
+    if (textInput.length < 2) {
       setErrors({ ...errors, text: true });
       return;
+    } else if (currentItem && textInput) {
+      const itemCopy = { ...currentItem };
+      itemCopy && updateValue({ ...itemCopy, value: textInput });
     }
-    currentItem && updateValue(currentItem);
   };
 
   const getItemFromTable = (key: string) => itemTable[key];
@@ -136,6 +130,9 @@ export default function Update({
   console.log(currentItem);
   return (
     <Box sx={{ width: "100%" }}>
+      <Typography variant="h5" m={2} gutterBottom component="div">
+        {`${type} Tools`}
+      </Typography>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
           value={value}
@@ -148,33 +145,31 @@ export default function Update({
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
-        <form>
-          <Box sx={{ mx: 2, mb: 3, maxWidth: 500 }}>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="name"
-              label={`New ${type}`}
-              fullWidth
-              variant="standard"
-              //   value={currentItem && currentItem.value}
-              error={errors.text}
-              onChange={handleTextInput}
-            />
-          </Box>
-          <Button
-            variant="contained"
-            sx={{ mx: 2 }}
-            onClick={handleAddItem}
-          >{`Add New ${type}`}</Button>
-        </form>
+        <Box sx={{ mx: 2, mb: 3, maxWidth: 500 }}>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            label={`New ${type}`}
+            fullWidth
+            variant="standard"
+            defaultValue={""}
+            error={errors.text}
+            onChange={handleTextInput}
+          />
+        </Box>
+        <Button
+          variant="contained"
+          sx={{ mx: 2 }}
+          onClick={handleAddItem}
+        >{`Add New ${type}`}</Button>
       </TabPanel>
       <TabPanel value={value} index={1}>
         <Box sx={{ width: 250, mx: 2, my: 3 }}>
-          <InputLabel id="demo-simple-select-label">Label To Update</InputLabel>
+          <InputLabel id="update-select-label">Label To Update</InputLabel>
           <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
+            labelId="update-select-label"
+            id="update-select"
             value={currentItem ? constructItemKey(currentItem) : ""}
             style={{ width: "100%" }}
             error={errors.select}
@@ -208,10 +203,10 @@ export default function Update({
 
       <TabPanel value={value} index={2}>
         <Box sx={{ width: 250, mx: 2, my: 3 }}>
-          <InputLabel id="demo-simple-select-label">Label To Update</InputLabel>
+          <InputLabel id="de-select-label">{`${type} To Delete`}</InputLabel>
           <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
+            labelId="de-select-label"
+            id="de-select"
             value={currentItem ? constructItemKey(currentItem) : ""}
             style={{ width: "100%" }}
             error={errors.select}

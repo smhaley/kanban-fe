@@ -1,22 +1,21 @@
 import * as React from "react";
 import type { NextPage } from "next";
 import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import Board from "../components/board/board";
 import Paper from "@mui/material/Paper";
-import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
-import CardContent from "@mui/material/CardContent";
-import Button from "@mui/material/Button";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
 import MuiAlert, { AlertProps } from "@mui/material/Alert";
 import Update from "../components/admin/update";
-import Snackbar from "@mui/material/Snackbar";
+import Select from "@mui/material/Select";
 import { GetServerSideProps } from "next";
 import * as UserService from "../api/user_service";
 import * as LabelService from "../api/label_service";
 import { Label, User } from "../api/models";
 import CircularProgress from "@mui/material/CircularProgress";
+import { AxiosError } from "axios";
+import { AlertColor } from "@mui/material";
+import Typography from "@mui/material/Typography";
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
   props,
@@ -48,40 +47,48 @@ interface AdminProps {
   labels: Label[];
   users: User[];
 }
+
+const alertTypes = {
+  conflict: { severity: "error", message: "The value added already exists" },
+  bad: { severity: "error", message: "Something went wrong, please try again" },
+  success: { severity: "success", message: "Changes successfully saved" },
+};
+
+const handleError = (err?: number) => {
+  if (err === 409) {
+    return alertTypes.conflict;
+  } else {
+    return alertTypes.bad;
+  }
+};
+
+enum EditType {
+  User = "User",
+  Label = "Label",
+}
+
 const Admin: NextPage<AdminProps> = ({ users, labels }) => {
   const [label, setLabel] = React.useState(labels);
   const [user, setUser] = React.useState(users);
-  const [snackOpen, setSnackOpen] = React.useState(false);
+  const [showAlert, setShowAlert] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [alertType, setAlertType] = React.useState(alertTypes.success);
+  const [editType, setEditType] = React.useState<EditType>(EditType.Label);
 
-  console.log(user, label);
-
-  const tranformLabel = (data: Label[]): UpdateData[] => {
+  const transformLabel = (data: Label[]): UpdateData[] => {
     let output: UpdateData[] = [];
     data.forEach((item) => {
       output.push({ id: item.id, value: item.label });
     });
     return output;
   };
-  const tranformUser = (data: User[]): UpdateData[] => {
+  const transformUser = (data: User[]): UpdateData[] => {
     let output: UpdateData[] = [];
     data.forEach((item) => {
       output.push({ id: item.id, value: item.username });
     });
     return output;
   };
-
-  const handleSnackClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-
-    setSnackOpen(false);
-  };
-  console.log(label);
 
   const refreshLabels = async () => {
     const resp = await LabelService.getLabels();
@@ -93,36 +100,91 @@ const Admin: NextPage<AdminProps> = ({ users, labels }) => {
     setUser(resp);
   };
 
-  const addLabel = async (newLabel: string) => {
+  const addValue = async (newVal: string) => {
     setLoading(true);
-    await LabelService.addLabel({ id: 999, label: newLabel });
-    await refreshLabels();
-    setSnackOpen(true);
-    closeLoader();
+    try {
+      if (editType === EditType.Label) {
+        await LabelService.addLabel({ id: 999, label: newVal.toLowerCase() });
+        await refreshLabels();
+      } else {
+        await UserService.addUser({ id: 999, username: newVal.toLowerCase() });
+        await refreshUsers();
+      }
+      setAlertType(alertTypes.success);
+    } catch (e) {
+      const err = (e as AxiosError)?.response?.status;
+      setAlertType(handleError(err));
+    }
   };
 
-  const updateLabel = async (item: UpdateData) => {
+  const updateValue = async (item: UpdateData) => {
     setLoading(true);
     const { id, value } = item;
-    await LabelService.updateLabel({ id, label: value });
-    await refreshLabels();
-    setSnackOpen(true);
-    setLoading(false);
-  };
-  const deleteLabel = async (id: number) => {
-    setLoading(true);
-    await LabelService.deleteLabel(id);
-    await refreshLabels();
-    setSnackOpen(true);
-    setLoading(false);
+    try {
+      if (editType === EditType.Label) {
+        await LabelService.updateLabel({ id, label: value.toLowerCase() });
+        await refreshLabels();
+      } else {
+        await UserService.updateUser({ id, username: value.toLowerCase() });
+        await refreshUsers();
+      }
+      setAlertType(alertTypes.success);
+    } catch (e) {
+      const err = (e as AxiosError)?.response?.status;
+      setAlertType(handleError(err));
+    }
   };
 
-  const closeLoader = () => {
-    setTimeout(() => setLoading(false), 500);
+  const deleteValue = async (id: number) => {
+    setLoading(true);
+    try {
+      if (editType === EditType.Label) {
+        await LabelService.deleteLabel(id);
+        await refreshLabels();
+      } else {
+        await UserService.deleteUser(id);
+        await refreshUsers();
+      }
+      setAlertType(alertTypes.success);
+    } catch (e) {
+      const err = (e as AxiosError)?.response?.status;
+      setAlertType(handleError(err));
+    }
   };
+
+  React.useEffect(() => {
+    const alert = setTimeout(() => setShowAlert(false), 3000);
+    return () => clearTimeout(alert);
+  }, [showAlert]);
+
+  React.useEffect(() => {
+    if (loading) {
+      const closeOutReq = () => {
+        setLoading(false);
+        setShowAlert(true);
+      };
+      const alert = setTimeout(() => closeOutReq(), 2000);
+      return () => clearTimeout(alert);
+    }
+  }, [loading]);
 
   return (
     <Container maxWidth="md" style={{ width: "100%" }}>
+      {showAlert && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 60,
+            left: "50%",
+            width: "60%",
+            transform: "translate(-50%, 0)",
+          }}
+        >
+          <Alert severity={alertType.severity as AlertColor}>
+            {alertType.message}
+          </Alert>
+        </Box>
+      )}
       <Box
         sx={{
           my: 5,
@@ -132,52 +194,56 @@ const Admin: NextPage<AdminProps> = ({ users, labels }) => {
         }}
       >
         <Paper sx={{ minHeigh: 500 }}>
-          <Typography variant="h5" m={2} gutterBottom component="div">
-            Label Tools
-          </Typography>
+          <Box sx={{ width: 250, mx: 2, my: 3 }}>
+            <Typography variant="h4" sx={{ pb: 2 }}>
+              Admin Editor{" "}
+            </Typography>
+            <InputLabel id="edit-select-label">Select Edit View</InputLabel>
+            <Select
+              labelId="edit-select-label"
+              id="edit-select"
+              value={editType}
+              style={{ width: "100%" }}
+              disabled={loading}
+              onChange={(e) => setEditType(e.target.value as EditType)}
+            >
+              {Object.values(EditType).map((val) => (
+                <MenuItem key={val} value={val}>
+                  {val}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
           <Box sx={{ m: 2, minHeigh: 500 }}>
             {loading ? (
-              <CircularProgress color="secondary" />
+              <Box sx={{ width: "100%", height: 250 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    pt: 8,
+                    justifyContent: "center",
+                  }}
+                >
+                  <CircularProgress color="secondary" />
+                </Box>
+              </Box>
             ) : (
               <Update
-                type={"Label"}
-                data={tranformLabel(label)}
-                updateValue={updateLabel}
-                deleteValue={deleteLabel}
-                addValue={addLabel}
+                key={editType}
+                type={editType}
+                data={
+                  editType === EditType.Label
+                    ? transformLabel(label)
+                    : transformUser(user)
+                }
+                updateValue={updateValue}
+                deleteValue={deleteValue}
+                addValue={addValue}
               />
             )}
           </Box>
         </Paper>
-
-        {/* <Paper>
-          <Typography variant="h5" m={2} gutterBottom component="div">
-            User Tools
-          </Typography>
-          <Box sx={{ m: 2 }}>
-            <Update
-              type={"Label"}
-              data={tranformLabel(labels)}
-              updateValue={() => {}}
-              deleteValue={() => {}}
-              addValue={() => {}}
-            />
-          </Box>
-        </Paper> */}
       </Box>
-      <Snackbar
-        open={snackOpen}
-        autoHideDuration={6000}
-        onClose={handleSnackClose}
-      >
-        <Alert
-          onClose={handleSnackClose}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
-          This is a success message!
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };
