@@ -14,7 +14,7 @@ import Select, { SelectChangeEvent } from "@mui/material/Select";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 import { Divider, Typography } from "@mui/material";
 import ConfirmationModal from "./confirm-delete";
-import { Item, Priority, ItemStatus } from "../../api/models";
+import { Item, Priority, ItemStatus, Label, User } from "../../api/models";
 import { labelPrettify } from "../../utils/board-utils";
 
 interface ModalProps {
@@ -25,32 +25,9 @@ interface ModalProps {
   updateItem: (updateItem: Item) => void;
   handleClose: () => void;
   deleteItem: (itemId: string) => void;
+  labels: Label[];
+  users: User[];
 }
-
-const labels = [
-  {
-    id: 1,
-    label: "Maintenance",
-  },
-  {
-    id: 2,
-    label: "Cleaning",
-  },
-];
-const users = [
-  {
-    id: 1,
-    username: "Shawn",
-  },
-  {
-    id: 2,
-    username: "Kathleen",
-  },
-  {
-    id: 3,
-    username: "Ingo",
-  },
-];
 
 interface State {
   item: Item;
@@ -107,6 +84,8 @@ export default function ContentForm({
   addNewItem,
   updateItem,
   deleteItem,
+  labels,
+  users,
 }: ModalProps) {
   const [itemState, itemDispatch] = React.useReducer(itemReducer, {
     item: item,

@@ -127,7 +127,6 @@ export default function Update({
     constructLookupTable();
   }, [data]);
 
-  console.log(currentItem);
   return (
     <Box sx={{ width: "100%" }}>
       <Typography variant="h5" m={2} gutterBottom component="div">

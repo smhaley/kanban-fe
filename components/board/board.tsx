@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import React, { useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import Modal from "./modal";
-import { Item } from "../../api/models";
+import { Item, User, Label } from "../../api/models";
 import * as ItemsService from "../../api/item_service";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
@@ -33,7 +33,12 @@ export interface ColType {
   [x: string]: Item[];
 }
 
-function App() {
+interface BoardProps {
+  labels: Label[];
+  users: User[];
+}
+
+function App({ labels, users }: BoardProps) {
   const [columns, setColumns] = useState<ColType>();
   const [items, setItems] = useState<Item[]>();
   const [modalState, setModalState] = useState(false);
@@ -197,6 +202,8 @@ function App() {
           updateItem={handleUpdateItem}
           isNew={isNew}
           deleteItem={handleDeleteItem}
+          labels={labels}
+          users={users}
         />
       )}
     </>
