@@ -110,7 +110,9 @@ export default function ContentForm({
     if (isNew) {
       addNewItem(itemState.item);
     } else {
-      updateItem(itemState.item);
+      const itemToUpdate = { ...itemState.item };
+      itemToUpdate.updateDateTime = Date.now().toString();
+      updateItem(itemToUpdate);
     }
     handleClose();
   };
@@ -247,9 +249,14 @@ export default function ContentForm({
                   label="label"
                   error={errorState.label}
                   onChange={(e) => handleChange(e, "label")}
+                  style={{ textTransform: "capitalize" }}
                 >
                   {labels.map((val) => (
-                    <MenuItem key={val.id} value={val.label}>
+                    <MenuItem
+                      key={val.id}
+                      value={val.label}
+                      style={{ textTransform: "capitalize" }}
+                    >
                       {val.label}
                     </MenuItem>
                   ))}
@@ -281,9 +288,14 @@ export default function ContentForm({
                   label="User"
                   error={errorState.user}
                   onChange={(e) => handleChange(e, "user")}
+                  style={{ textTransform: "capitalize" }}
                 >
                   {users.map((val) => (
-                    <MenuItem key={val.id} value={val.username}>
+                    <MenuItem
+                      key={val.id}
+                      value={val.username}
+                      style={{ textTransform: "capitalize" }}
+                    >
                       {val.username}
                     </MenuItem>
                   ))}

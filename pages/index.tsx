@@ -1,13 +1,11 @@
 import * as React from "react";
 import type { NextPage } from "next";
 import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Board from "../components/board/board";
-import * as ItemsService from "../api/item_service";
 import * as UserService from "../api/user_service";
 import * as LabelService from "../api/label_service";
-import { Item, User, Label } from "../api/models";
+import { User, Label } from "../api/models";
 import { GetServerSideProps } from "next";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {

@@ -170,12 +170,16 @@ export default function Update({
             labelId="update-select-label"
             id="update-select"
             value={currentItem ? constructItemKey(currentItem) : ""}
-            style={{ width: "100%" }}
+            style={{ width: "100%", textTransform: "capitalize" }}
             error={errors.select}
             onChange={handleSelect}
           >
             {data.map((val) => (
-              <MenuItem key={val.id} value={constructItemKey(val)}>
+              <MenuItem
+                key={val.id}
+                value={constructItemKey(val)}
+                style={{ textTransform: "capitalize" }}
+              >
                 {val.value}
               </MenuItem>
             ))}
@@ -207,12 +211,16 @@ export default function Update({
             labelId="de-select-label"
             id="de-select"
             value={currentItem ? constructItemKey(currentItem) : ""}
-            style={{ width: "100%" }}
+            style={{ width: "100%", textTransform: "capitalize" }}
             error={errors.select}
             onChange={handleSelect}
           >
             {data.map((val) => (
-              <MenuItem key={val.id} value={constructItemKey(val)}>
+              <MenuItem
+                key={val.id}
+                value={constructItemKey(val)}
+                style={{ textTransform: "capitalize" }}
+              >
                 {val.value}
               </MenuItem>
             ))}

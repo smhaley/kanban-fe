@@ -63,8 +63,8 @@ const handleError = (err?: number) => {
 };
 
 enum EditType {
-  User = "User",
   Label = "Label",
+  User = "User",
 }
 
 const Admin: NextPage<AdminProps> = ({ users, labels }) => {
