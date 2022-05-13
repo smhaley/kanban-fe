@@ -110,7 +110,7 @@ export default function ItemDisplay({
 
   const isComplete = item.itemStatus === ItemStatus.COMPLETE;
   const isArchived = item.itemStatus === ItemStatus.ARCHIVE;
-  const isDisabled =  isArchived;
+  const isDisabled = isArchived || isComplete;
 
   const itemStatusOptions = getItemStatusOptions(isArchived);
 
@@ -235,121 +235,123 @@ export default function ItemDisplay({
       {showTitle && <CardHeader title={item.title} />}
       <CardContent>
         {renderDates(!isNew)}
-        <form>
-          <Box sx={{ mb: 2 }}>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="name"
-              label="Title"
-              fullWidth
-              disabled={isDisabled}
-              variant="standard"
-              value={itemState.item.title}
-              error={errorState.title}
-              onChange={(e) => handleChange(e, "title")}
-            />
-            {errorState.title && (
-              <FormHelperText>Title is required</FormHelperText>
-            )}
-          </Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <FormControl margin="dense" sx={{ my: 2, pr: 1, width: 250 }}>
-              <InputLabel id="demo-simple-select-label">Label</InputLabel>
-              <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                value={itemState.item.label}
-                label="label"
+        <Box sx={{ mt: isNew ? -2 : 2 }}>
+          <form style={{}}>
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                autoFocus
+                margin="dense"
+                id="name"
+                label="Title"
+                fullWidth
                 disabled={isDisabled}
-                error={errorState.label}
-                onChange={(e) => handleChange(e, "label")}
-                style={{ textTransform: "capitalize" }}
-              >
-                {labels.map((val) => (
-                  <MenuItem
-                    key={val.id}
-                    value={val.label}
-                    style={{ textTransform: "capitalize" }}
-                  >
-                    {val.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                variant="standard"
+                value={itemState.item.title}
+                error={errorState.title}
+                onChange={(e) => handleChange(e, "title")}
+              />
+              {errorState.title && (
+                <FormHelperText>Title is required</FormHelperText>
+              )}
+            </Box>
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <FormControl margin="dense" sx={{ my: 2, pr: 1, width: 250 }}>
+                <InputLabel id="demo-simple-select-label">Label</InputLabel>
+                <Select
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={itemState.item.label}
+                  label="label"
+                  disabled={isDisabled}
+                  error={errorState.label}
+                  onChange={(e) => handleChange(e, "label")}
+                  style={{ textTransform: "capitalize" }}
+                >
+                  {labels.map((val) => (
+                    <MenuItem
+                      key={val.id}
+                      value={val.label}
+                      style={{ textTransform: "capitalize" }}
+                    >
+                      {val.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-            <FormControl margin="dense" sx={{ my: 2, pl: 1, width: 250 }}>
-              <InputLabel id="priority-select">Priority</InputLabel>
-              <Select
-                labelId="priority-select"
-                value={itemState.item.priority}
-                label="Priority"
+              <FormControl margin="dense" sx={{ my: 2, pl: 1, width: 250 }}>
+                <InputLabel id="priority-select">Priority</InputLabel>
+                <Select
+                  labelId="priority-select"
+                  value={itemState.item.priority}
+                  label="Priority"
+                  disabled={isDisabled}
+                  onChange={(e) => handleChange(e, "priority")}
+                >
+                  {Object.keys(Priority).map((val) => (
+                    <MenuItem key={val} value={val}>
+                      {labelPrettify(val)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <FormControl margin="dense" sx={{ my: 2, pr: 1, width: 250 }}>
+                <InputLabel id="user-select">User</InputLabel>
+                <Select
+                  labelId="user-select"
+                  value={itemState.item.user}
+                  label="User"
+                  disabled={isDisabled}
+                  error={errorState.user}
+                  onChange={(e) => handleChange(e, "user")}
+                  style={{ textTransform: "capitalize" }}
+                >
+                  {users.map((val) => (
+                    <MenuItem
+                      key={val.id}
+                      value={val.username}
+                      style={{ textTransform: "capitalize" }}
+                    >
+                      {val.username}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl margin="dense" sx={{ my: 2, width: 250, pl: 1 }}>
+                <InputLabel id="status-select">Status</InputLabel>
+                <Select
+                  labelId="status-select"
+                  value={itemState.item.itemStatus}
+                  label="status"
+                  disabled={isNew || isDisabled}
+                  onChange={(e) => handleChange(e, "status")}
+                >
+                  {itemStatusOptions.map((val) => (
+                    <MenuItem key={val} value={val}>
+                      {labelPrettify(val)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            <Box sx={{ my: 2 }}>
+              <InputLabel id="user-select">Comments</InputLabel>
+              <TextareaAutosize
+                aria-label="minimum height"
+                minRows={8}
+                minLength={6}
+                maxRows={15}
+                placeholder="Task details"
                 disabled={isDisabled}
-                onChange={(e) => handleChange(e, "priority")}
-              >
-                {Object.keys(Priority).map((val) => (
-                  <MenuItem key={val} value={val}>
-                    {labelPrettify(val)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <FormControl margin="dense" sx={{ my: 2, pr: 1, width: 250 }}>
-              <InputLabel id="user-select">User</InputLabel>
-              <Select
-                labelId="user-select"
-                value={itemState.item.user}
-                label="User"
-                disabled={isDisabled}
-                error={errorState.user}
-                onChange={(e) => handleChange(e, "user")}
-                style={{ textTransform: "capitalize" }}
-              >
-                {users.map((val) => (
-                  <MenuItem
-                    key={val.id}
-                    value={val.username}
-                    style={{ textTransform: "capitalize" }}
-                  >
-                    {val.username}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl margin="dense" sx={{ my: 2, width: 250, pl: 1 }}>
-              <InputLabel id="status-select">Status</InputLabel>
-              <Select
-                labelId="status-select"
-                value={itemState.item.itemStatus}
-                label="status"
-                disabled={isNew || isDisabled}
-                onChange={(e) => handleChange(e, "status")}
-              >
-                {itemStatusOptions.map((val) => (
-                  <MenuItem key={val} value={val}>
-                    {labelPrettify(val)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-          <Box sx={{ my: 2 }}>
-            <InputLabel id="user-select">Comments</InputLabel>
-            <TextareaAutosize
-              aria-label="minimum height"
-              minRows={8}
-              minLength={6}
-              maxRows={15}
-              placeholder="Task details"
-              disabled={isDisabled}
-              style={{ width: "100%" }}
-              value={itemState.item.content}
-              onChange={(e) => handleChange(e, "content")}
-            />
-          </Box>
-        </form>
+                style={{ width: "100%" }}
+                value={itemState.item.content}
+                onChange={(e) => handleChange(e, "content")}
+              />
+            </Box>
+          </form>
+        </Box>
       </CardContent>
       <CardActions
         style={{ justifyContent: isNew ? "right" : "space-between" }}
@@ -366,7 +368,7 @@ export default function ItemDisplay({
           </Button>
         )}
         <Box>
-          {handleClose && (
+          {handleClose && !isArchived && (
             <Button sx={{ mr: 1 }} onClick={() => handleClose()} autoFocus>
               close
             </Button>
@@ -375,7 +377,7 @@ export default function ItemDisplay({
             variant="contained"
             color={isComplete ? "info" : "primary"}
             onClick={handleSubmit}
-            disabled={isDisabled}
+            disabled={isArchived}
             autoFocus
           >
             {isComplete ? "Archive" : "Save"}

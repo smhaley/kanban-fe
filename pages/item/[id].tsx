@@ -9,6 +9,8 @@ import * as UserService from "../../api/user_service";
 import * as LabelService from "../../api/label_service";
 import { Item, Label, User } from "../../api/models";
 import ItemDisplay from "../../components/shared/item-display";
+import Router from "next/router";
+
 export const getServerSideProps: GetServerSideProps = async (context) => {
   let item: Item | undefined = undefined;
 
@@ -50,12 +52,13 @@ const ItemPage: NextPage<ItemPageProps> = ({ item, users, labels }) => {
 
   const handleDeleteItem = async (itemId: string) => {
     await ItemService.deleteItem(itemId);
-    //redirect to home
+    Router.push("/");
   };
+  
   return (
-    <Container maxWidth="md" style={{ width: "100%" }}>
+    <Container maxWidth="sm" style={{ width: "100%" }}>
       <Box sx={{ mt: 5 }}>
-        <Paper sx={{ minHeigh: 500 }}>
+        <Paper sx={{ minHeight: 500 }}>
           <Box sx={{ display: "flex", justifyContent: "center" }}>
             <ItemDisplay
               item={itemState}

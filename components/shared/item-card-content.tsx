@@ -1,20 +1,23 @@
 import React from "react";
 import CardContent from "@mui/material/CardContent";
-import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
-import { Item, Priority } from "../../api/models";
+import { Item } from "../../api/models";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import { labelPrettify, priorityColorMapper } from "../../utils/shared";
 
 export interface ItemContentProps {
   item: Item;
+  isSmall: boolean;
 }
 
-export default function ItemContent({ item }: ItemContentProps) {
+export default function ItemContent({ item, isSmall }: ItemContentProps) {
+  const chipSize = isSmall ? "small" : "medium";
   return (
     <>
-      <CardHeader title={item.title} />
+      <Typography sx={{ fontSize: isSmall ? 16 : 18, pl: 3, pt: 2 }}>
+        {item.title}
+      </Typography>
       <CardContent>
         <Stack
           direction="column"
@@ -22,13 +25,21 @@ export default function ItemContent({ item }: ItemContentProps) {
           sx={{ textTransform: "capitalize" }}
         >
           <Chip
-            sx={{ p: 1 }}
+            sx={{ p: 1, pointerEvents: "none" }}
             color="secondary"
+            size={chipSize}
             variant="outlined"
             label={item.user}
           />
-          <Chip sx={{ p: 1 }} variant="outlined" label={item.label} />
           <Chip
+            sx={{ p: 1, pointerEvents: "none" }}
+            variant="outlined"
+            size={chipSize}
+            label={item.label}
+          />
+          <Chip
+            sx={{ pointerEvents: "none" }}
+            size={chipSize}
             color={priorityColorMapper(item.priority)}
             label={labelPrettify(item.priority)}
           />

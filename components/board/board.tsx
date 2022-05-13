@@ -131,7 +131,7 @@ export default function Board({ labels, users }: BoardProps) {
                               ? "#cdafff"
                               : "#ececec",
                             padding: 1,
-                            width: 210,
+                            width: 180,
                             minHeight: 500,
                           }}
                         >
@@ -149,6 +149,7 @@ export default function Board({ labels, users }: BoardProps) {
                                       {...provided.dragHandleProps}
                                       ref={provided.innerRef}
                                       sx={{
+                                        cursor: "pointer",
                                         userSelect: "none",
                                         margin: 1,
                                         minHeight: 50,
@@ -159,7 +160,7 @@ export default function Board({ labels, users }: BoardProps) {
                                       }}
                                       onClick={() => updateItemModal(item.id)}
                                     >
-                                      <ItemContent item={item} />
+                                      <ItemContent item={item} isSmall />
                                     </Card>
                                   );
                                 }}

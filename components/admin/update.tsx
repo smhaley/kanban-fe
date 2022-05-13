@@ -129,15 +129,13 @@ export default function Update({
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Typography variant="h5" m={2} gutterBottom component="div">
-        {`${type} Tools`}
-      </Typography>
+
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
           value={value}
           onChange={handleChange}
           aria-label="basic tabs example"
-        >
+      >
           <Tab label={`New ${type}`} {...a11yProps(0)} />
           <Tab label={`Update ${type}`} {...a11yProps(1)} />
           <Tab label={`Delete ${type}`} {...a11yProps(2)} />
