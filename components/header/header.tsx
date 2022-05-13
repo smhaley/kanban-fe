@@ -14,7 +14,7 @@ import styled from "@emotion/styled";
 const StyledMenuItem = styled(MenuItem)`
   a {
     text-decoration: none;
-    color: #000
+    color: #000;
   }
 `;
 
@@ -53,11 +53,13 @@ export default function ButtonAppBar() {
               }}
             >
               <StyledMenuItem onClick={handleClose}>
-                {" "}
                 <Link href="/">Home</Link>
               </StyledMenuItem>
               <StyledMenuItem onClick={handleClose}>
                 <Link href="/admin">Admin</Link>
+              </StyledMenuItem>
+              <StyledMenuItem onClick={handleClose}>
+                <Link href="/archive">Archive</Link>
               </StyledMenuItem>
             </Menu>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
