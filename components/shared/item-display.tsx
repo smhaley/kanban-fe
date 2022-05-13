@@ -8,6 +8,7 @@ import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
 import Box from "@mui/material/Box";
 import InputLabel from "@mui/material/InputLabel";
+import CardHeader from "@mui/material/CardHeader";
 import MenuItem from "@mui/material/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
@@ -15,18 +16,19 @@ import { Typography } from "@mui/material";
 import ConfirmationModal from "../board/confirm-delete";
 import { Item, Priority, ItemStatus, Label, User } from "../../api/models";
 import { labelPrettify } from "../../utils/shared";
-import {getDate} from "../../utils/item-display-utils"
+import { getDate } from "../../utils/item-display-utils";
 
 interface ItemDisplayProps {
   item: Item;
   isNew: boolean;
-  addNewItem: (item: Item) => void;
+  addNewItem?: (item: Item) => void;
   updateItem: (updateItem: Item) => void;
-  archiveItem: (archiveItem: Item) => void;
-  handleClose: () => void;
+  archiveItem?: (archiveItem: Item) => void;
+  handleClose?: () => void;
   deleteItem: (itemId: string) => void;
   labels: Label[];
   users: User[];
+  showTitle: boolean;
 }
 
 interface State {
@@ -76,6 +78,18 @@ const itemReducer = (state: State, action: Action): State => {
 
 const baseError = { title: false, user: false, label: false };
 
+const getItemStatusOptions = (isArchived: boolean) => {
+  if (isArchived) {
+    return Object.values(ItemStatus).filter(
+      (status) => status === ItemStatus.ARCHIVE
+    );
+  } else {
+    return Object.values(ItemStatus).filter(
+      (status) => status !== ItemStatus.ARCHIVE
+    );
+  }
+};
+
 export default function ItemDisplay({
   item,
   handleClose,
@@ -86,6 +100,7 @@ export default function ItemDisplay({
   labels,
   users,
   archiveItem,
+  showTitle,
 }: ItemDisplayProps) {
   const [itemState, itemDispatch] = React.useReducer(itemReducer, {
     item: item,
@@ -94,9 +109,10 @@ export default function ItemDisplay({
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
   const isComplete = item.itemStatus === ItemStatus.COMPLETE;
-  const modalItemStatus = Object.values(ItemStatus).filter(
-    (status) => status !== ItemStatus.ARCHIVE
-  );
+  const isArchived = item.itemStatus === ItemStatus.ARCHIVE;
+  const isDisabled =  isArchived;
+
+  const itemStatusOptions = getItemStatusOptions(isArchived);
 
   const handleSubmit = () => {
     const { user, title, label } = itemState.item;
@@ -115,24 +131,24 @@ export default function ItemDisplay({
     const now = new Date(Date.now());
     const updateTime = now.toISOString();
 
-    if (isNew) {
+    if (isNew && addNewItem) {
       addNewItem(itemState.item);
     } else if (isComplete) {
       const itemToArchive = { ...itemState.item };
       itemToArchive.updateDateTime = updateTime;
       itemToArchive.itemStatus = ItemStatus.ARCHIVE;
-      archiveItem(itemToArchive);
+      archiveItem && archiveItem(itemToArchive);
     } else {
       const itemToUpdate = { ...itemState.item };
       itemToUpdate.updateDateTime = updateTime;
       updateItem(itemToUpdate);
     }
-    handleClose();
+    handleClose && handleClose();
   };
 
   const handleDeleteItem = () => {
     item.id && deleteItem(item.id);
-    handleClose();
+    handleClose && handleClose();
   };
 
   const handleChange = (
@@ -196,7 +212,7 @@ export default function ItemDisplay({
   const renderDates = (show: boolean) => {
     if (show && item.updateDateTime && item.creationDateTime) {
       return (
-        <Box sx={{ my: 2 }}>
+        <Box>
           <Box sx={{ display: "flex" }}>
             <Typography color="text.secondary" sx={{ pr: 3 }}>
               Creation Date:
@@ -216,6 +232,7 @@ export default function ItemDisplay({
 
   return (
     <Card sx={{ border: "none", boxShadow: "none" }}>
+      {showTitle && <CardHeader title={item.title} />}
       <CardContent>
         {renderDates(!isNew)}
         <form>
@@ -226,7 +243,7 @@ export default function ItemDisplay({
               id="name"
               label="Title"
               fullWidth
-              disabled={isComplete}
+              disabled={isDisabled}
               variant="standard"
               value={itemState.item.title}
               error={errorState.title}
@@ -244,7 +261,7 @@ export default function ItemDisplay({
                 id="demo-simple-select"
                 value={itemState.item.label}
                 label="label"
-                disabled={isComplete}
+                disabled={isDisabled}
                 error={errorState.label}
                 onChange={(e) => handleChange(e, "label")}
                 style={{ textTransform: "capitalize" }}
@@ -267,7 +284,7 @@ export default function ItemDisplay({
                 labelId="priority-select"
                 value={itemState.item.priority}
                 label="Priority"
-                disabled={isComplete}
+                disabled={isDisabled}
                 onChange={(e) => handleChange(e, "priority")}
               >
                 {Object.keys(Priority).map((val) => (
@@ -285,7 +302,7 @@ export default function ItemDisplay({
                 labelId="user-select"
                 value={itemState.item.user}
                 label="User"
-                disabled={isComplete}
+                disabled={isDisabled}
                 error={errorState.user}
                 onChange={(e) => handleChange(e, "user")}
                 style={{ textTransform: "capitalize" }}
@@ -307,10 +324,10 @@ export default function ItemDisplay({
                 labelId="status-select"
                 value={itemState.item.itemStatus}
                 label="status"
-                disabled={isNew || isComplete}
+                disabled={isNew || isDisabled}
                 onChange={(e) => handleChange(e, "status")}
               >
-                {modalItemStatus.map((val) => (
+                {itemStatusOptions.map((val) => (
                   <MenuItem key={val} value={val}>
                     {labelPrettify(val)}
                   </MenuItem>
@@ -324,8 +341,9 @@ export default function ItemDisplay({
               aria-label="minimum height"
               minRows={8}
               minLength={6}
+              maxRows={15}
               placeholder="Task details"
-              disabled={isComplete}
+              disabled={isDisabled}
               style={{ width: "100%" }}
               value={itemState.item.content}
               onChange={(e) => handleChange(e, "content")}
@@ -341,20 +359,23 @@ export default function ItemDisplay({
             variant="contained"
             color="warning"
             onClick={() => setConfirmDelete(true)}
-            disabled={isComplete}
+            disabled={isComplete || isArchived}
             autoFocus
           >
             delete
           </Button>
         )}
         <Box>
-          <Button sx={{ mr: 1 }} onClick={() => handleClose()} autoFocus>
-            close
-          </Button>
+          {handleClose && (
+            <Button sx={{ mr: 1 }} onClick={() => handleClose()} autoFocus>
+              close
+            </Button>
+          )}
           <Button
             variant="contained"
             color={isComplete ? "info" : "primary"}
             onClick={handleSubmit}
+            disabled={isDisabled}
             autoFocus
           >
             {isComplete ? "Archive" : "Save"}

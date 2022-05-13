@@ -1,6 +1,5 @@
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -12,12 +11,9 @@ import * as ItemsService from "../../api/item_service";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 import { emptyItem } from "../../constants/board-constants";
-import {
-  instantiateCols,
-  onDragEnd,
-} from "../../utils/board-utils";
+import { instantiateCols, onDragEnd } from "../../utils/board-utils";
 import ItemDisplay from "../shared/item-display";
-import ItemContent from "../shared/item-card-content"
+import ItemContent from "../shared/item-card-content";
 import { labelPrettify } from "../../utils/shared";
 
 export interface ColType {
@@ -163,7 +159,7 @@ export default function Board({ labels, users }: BoardProps) {
                                       }}
                                       onClick={() => updateItemModal(item.id)}
                                     >
-                                      <ItemContent item = {item}/>
+                                      <ItemContent item={item} />
                                     </Card>
                                   );
                                 }}
@@ -196,6 +192,7 @@ export default function Board({ labels, users }: BoardProps) {
             deleteItem={handleDeleteItem}
             labels={labels}
             users={users}
+            showTitle={false}
           />
         </Modal>
       )}

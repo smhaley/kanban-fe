@@ -7,7 +7,7 @@ export const getItems = () => {
 
 
 export const getItem = (id: string) => {
-  return get<Item[]>(`/kanbanItem/${id}`);
+  return get<Item>(`/kanbanItem/${id}`);
 };
 
 export const getArchivedItems = () => {

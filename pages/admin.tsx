@@ -194,7 +194,7 @@ const Admin: NextPage<AdminProps> = ({ users, labels }) => {
         }}
       >
         <Paper sx={{ minHeigh: 500 }}>
-          <Box sx={{ width: 250, mx: 2, my: 3 }}>
+          <Box sx={{ width: 250, mx: 4, my: 4 }}>
             <Typography variant="h4" sx={{ pb: 2 }}>
               Admin Editor{" "}
             </Typography>
@@ -203,12 +203,16 @@ const Admin: NextPage<AdminProps> = ({ users, labels }) => {
               labelId="edit-select-label"
               id="edit-select"
               value={editType}
-              style={{ width: "100%" }}
+              style={{ width: "100%", textTransform: "capitalize" }}
               disabled={loading}
               onChange={(e) => setEditType(e.target.value as EditType)}
             >
               {Object.values(EditType).map((val) => (
-                <MenuItem key={val} value={val}>
+                <MenuItem
+                  key={val}
+                  value={val}
+                  style={{ textTransform: "capitalize" }}
+                >
                   {val}
                 </MenuItem>
               ))}
