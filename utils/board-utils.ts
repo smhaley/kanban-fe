@@ -3,16 +3,6 @@ import { Item, ItemStatus } from "../api/models";
 import { DropResult } from "react-beautiful-dnd";
 import * as ItemsService from "../api/item_service";
 
-export const labelPrettify = (val: string) => {
-  return val
-    .toLowerCase()
-    .split("_")
-    .map((word) => {
-      return word[0].toUpperCase() + word.slice(1);
-    })
-    .join(" ");
-};
-
 export const instantiateCols = (resp: Item[]) => {
   const itemCols = Object.keys(ItemStatus).filter(
     (item) => item !== ItemStatus.ARCHIVE

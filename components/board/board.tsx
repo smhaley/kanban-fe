@@ -13,21 +13,12 @@ import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 import { emptyItem } from "../../constants/board-constants";
 import {
-  labelPrettify,
   instantiateCols,
   onDragEnd,
 } from "../../utils/board-utils";
-
-export interface ItemType {
-  id: string;
-  title: string;
-  label: string;
-  user: string;
-  content: string;
-  updateDateTime: string;
-  itemStatus: string;
-  creationDateTime: string;
-}
+import ItemDisplay from "../shared/item-display";
+import ItemContent from "../shared/item-card-content"
+import { labelPrettify } from "../../utils/shared";
 
 export interface ColType {
   [x: string]: Item[];
@@ -38,7 +29,7 @@ interface BoardProps {
   users: User[];
 }
 
-function App({ labels, users }: BoardProps) {
+export default function Board({ labels, users }: BoardProps) {
   const [columns, setColumns] = useState<ColType>();
   const [items, setItems] = useState<Item[]>();
   const [modalState, setModalState] = useState(false);
@@ -172,18 +163,7 @@ function App({ labels, users }: BoardProps) {
                                       }}
                                       onClick={() => updateItemModal(item.id)}
                                     >
-                                      <CardContent>
-                                        <Typography variant="h6">
-                                          {item.title}
-                                        </Typography>
-                                        <Typography>{item.user}</Typography>
-                                        <Typography
-                                          sx={{ fontSize: 14 }}
-                                          color="text.secondary"
-                                        >
-                                          {item.label}
-                                        </Typography>
-                                      </CardContent>
+                                      <ItemContent item = {item}/>
                                     </Card>
                                   );
                                 }}
@@ -203,19 +183,22 @@ function App({ labels, users }: BoardProps) {
       {modalState && (
         <Modal
           isOpen={modalState}
-          item={currentItem}
+          title={isNew ? "New Task" : `Update Task: ${currentItem.title}`}
           handleClose={modalClose}
-          addNewItem={handleNewItem}
-          updateItem={handleUpdateItem}
-          archiveItem={handleArchive}
-          isNew={isNew}
-          deleteItem={handleDeleteItem}
-          labels={labels}
-          users={users}
-        />
+        >
+          <ItemDisplay
+            item={currentItem}
+            handleClose={modalClose}
+            addNewItem={handleNewItem}
+            updateItem={handleUpdateItem}
+            archiveItem={handleArchive}
+            isNew={isNew}
+            deleteItem={handleDeleteItem}
+            labels={labels}
+            users={users}
+          />
+        </Modal>
       )}
     </>
   );
 }
-
-export default App;
