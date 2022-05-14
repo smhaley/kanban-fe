@@ -16,6 +16,7 @@ import ItemDisplay from "../shared/item-display";
 import ItemContent from "../shared/item-card-content";
 import { labelPrettify } from "../../utils/shared";
 
+
 export interface ColType {
   [x: string]: Item[];
 }
@@ -101,102 +102,109 @@ export default function Board({ labels, users }: BoardProps) {
   };
 
   return (
-    <>
-      <Box sx={{ mt: -3, maxWidth: 250, top: 0 }}>
-        <Button startIcon={<AddIcon />} onClick={newItemModal}>
-          New Task
-        </Button>
-      </Box>
-      <Grid sx={{ flexGrow: 1 }} container spacing={1}>
-        <DragDropContext
-          onDragEnd={(result) => onDragEnd(result, setColumns, columns)}
-        >
-          {columns &&
-            Object.entries(columns).map(([columnId, column]) => {
-              return (
-                <Droppable droppableId={columnId} key={columnId}>
-                  {(provided, snapshot) => {
-                    return (
-                      <Grid item>
-                        <Box sx={{ textAlign: "center", mb: 1, pt: 1 }}>
-                          <Typography variant="h6">
-                            {labelPrettify(columnId)}
-                          </Typography>
-                        </Box>
-                        <Paper
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                          sx={{
-                            background: snapshot.isDraggingOver
-                              ? "#cdafff"
-                              : "#ececec",
-                            padding: 1,
-                            width: 180,
-                            minHeight: 500,
-                          }}
-                        >
-                          {column.map((item, idx) => {
-                            return (
-                              <Draggable
-                                key={item.id}
-                                draggableId={item.id}
-                                index={idx}
-                              >
-                                {(provided, snapshot) => {
-                                  return (
-                                    <Card
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      ref={provided.innerRef}
-                                      sx={{
-                                        cursor: "pointer",
-                                        userSelect: "none",
-                                        margin: 1,
-                                        minHeight: 50,
-                                        backgroundColor: snapshot.isDragging
-                                          ? "#f6f2fd"
-                                          : "#fffefe",
-                                        ...provided.draggableProps.style,
-                                      }}
-                                      onClick={() => updateItemModal(item.id)}
-                                    >
-                                      <ItemContent item={item} isSmall />
-                                    </Card>
-                                  );
-                                }}
-                              </Draggable>
-                            );
-                          })}
-                          {provided.placeholder}
-                        </Paper>
-                      </Grid>
-                    );
-                  }}
-                </Droppable>
-              );
-            })}
-        </DragDropContext>
-      </Grid>
-      {modalState && (
-        <Modal
-          isOpen={modalState}
-          title={isNew ? "New Task" : `Update Task: ${currentItem.title}`}
-          handleClose={modalClose}
-        >
-          <ItemDisplay
-            item={currentItem}
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      <Box>
+        <Box sx={{ mt: -3, maxWidth: 250, top: 0 }}>
+          <Button startIcon={<AddIcon />} onClick={newItemModal}>
+            New Task
+          </Button>
+        </Box>
+        <Grid sx={{ flexGrow: 1 }} container spacing={1}>
+          <DragDropContext
+            onDragEnd={(result) => onDragEnd(result, setColumns, columns)}
+          >
+            {columns &&
+              Object.entries(columns).map(([columnId, column]) => {
+                return (
+                  <Droppable droppableId={columnId} key={columnId}>
+                    {(provided, snapshot) => {
+                      return (
+                        <Grid item>
+                          <Box sx={{ textAlign: "center", mb: 1, pt: 1 }}>
+                            <Typography variant="h6">
+                              {labelPrettify(columnId)}
+                            </Typography>
+                          </Box>
+                          <Paper
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            sx={{
+                              background: snapshot.isDraggingOver
+                                ? "#cdafff"
+                                : "#ececec",
+                              padding: 1,
+                              width: 180,
+                              minHeight: 500,
+                            }}
+                          >
+                            {column.map((item, idx) => {
+                              return (
+                                <Draggable
+                                  key={item.id}
+                                  draggableId={item.id}
+                                  index={idx}
+                                >
+                                  {(provided, snapshot) => {
+                                    return (
+                                      <Card
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        ref={provided.innerRef}
+                                        sx={{
+                                          cursor: "pointer",
+                                          userSelect: "none",
+                                          margin: 1,
+                                          minHeight: 50,
+                                          backgroundColor: snapshot.isDragging
+                                            ? "#f6f2fd"
+                                            : "#fffefe",
+                                          ...provided.draggableProps.style,
+                                        }}
+                                        onClick={() => updateItemModal(item.id)}
+                                      >
+                                        <ItemContent item={item} isSmall />
+                                      </Card>
+                                    );
+                                  }}
+                                </Draggable>
+                              );
+                            })}
+                            {provided.placeholder}
+                          </Paper>
+                        </Grid>
+                      );
+                    }}
+                  </Droppable>
+                );
+              })}
+          </DragDropContext>
+        </Grid>
+        {modalState && (
+          <Modal
+            isOpen={modalState}
+            title={isNew ? "New Task" : `Update Task: ${currentItem.title}`}
             handleClose={modalClose}
-            addNewItem={handleNewItem}
-            updateItem={handleUpdateItem}
-            archiveItem={handleArchive}
-            isNew={isNew}
-            deleteItem={handleDeleteItem}
-            labels={labels}
-            users={users}
-            showTitle={false}
-          />
-        </Modal>
-      )}
-    </>
+          >
+            <ItemDisplay
+              item={currentItem}
+              handleClose={modalClose}
+              addNewItem={handleNewItem}
+              updateItem={handleUpdateItem}
+              archiveItem={handleArchive}
+              isNew={isNew}
+              deleteItem={handleDeleteItem}
+              labels={labels}
+              users={users}
+              showTitle={false}
+            />
+          </Modal>
+        )}
+      </Box>
+    </Box>
   );
 }

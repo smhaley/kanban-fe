@@ -10,6 +10,15 @@ import * as ItemService from "../api/item_service";
 import { Item } from "../api/models";
 import ItemContent from "../components/shared/item-card-content";
 import Router from "next/router";
+import styled from "@emotion/styled";
+
+const StyledCard = styled(Card)`
+  transition: all .25s linear;
+    box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.4);
+  &:hover {
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+  }
+`;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const archivedItems = await ItemService.getArchivedItems();
@@ -39,7 +48,7 @@ const Archive: NextPage<ArchiveProps> = ({ archivedItems }) => {
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap" }}>
             {archivedItems.map((item) => (
-              <Card
+              <StyledCard
                 key={item.id}
                 onClick={() => handleCardClick(item.id)}
                 sx={{
@@ -51,7 +60,7 @@ const Archive: NextPage<ArchiveProps> = ({ archivedItems }) => {
                 }}
               >
                 <ItemContent item={item} isSmall={false} />
-              </Card>
+              </StyledCard>
             ))}
           </Box>
         </Paper>
