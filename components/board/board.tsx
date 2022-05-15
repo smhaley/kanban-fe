@@ -1,10 +1,7 @@
-import Grid from "@mui/material/Grid";
-import Card from "@mui/material/Card";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
 import React, { useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import { DragDropContext } from "react-beautiful-dnd";
 import Modal from "./modal";
 import { Item, User, Label } from "../../api/models";
 import * as ItemsService from "../../api/item_service";
@@ -13,9 +10,8 @@ import AddIcon from "@mui/icons-material/Add";
 import { emptyItem } from "../../constants/board-constants";
 import { instantiateCols, onDragEnd } from "../../utils/board-utils";
 import ItemDisplay from "../shared/item-display";
-import ItemContent from "../shared/item-card-content";
-import { labelPrettify } from "../../utils/shared";
-
+import DragItem from "./drag-item";
+import Column from "./column";
 
 export interface ColType {
   [x: string]: Item[];
@@ -121,65 +117,18 @@ export default function Board({ labels, users }: BoardProps) {
             {columns &&
               Object.entries(columns).map(([columnId, column]) => {
                 return (
-                  <Droppable droppableId={columnId} key={columnId}>
-                    {(provided, snapshot) => {
+                  <Column key={columnId} columnId={columnId}>
+                    {column.map((item, idx) => {
                       return (
-                        <Grid item>
-                          <Box sx={{ textAlign: "center", mb: 1, pt: 1 }}>
-                            <Typography variant="h6">
-                              {labelPrettify(columnId)}
-                            </Typography>
-                          </Box>
-                          <Paper
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                            sx={{
-                              background: snapshot.isDraggingOver
-                                ? "#cdafff"
-                                : "#ececec",
-                              padding: 1,
-                              width: 180,
-                              minHeight: 500,
-                            }}
-                          >
-                            {column.map((item, idx) => {
-                              return (
-                                <Draggable
-                                  key={item.id}
-                                  draggableId={item.id}
-                                  index={idx}
-                                >
-                                  {(provided, snapshot) => {
-                                    return (
-                                      <Card
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        ref={provided.innerRef}
-                                        sx={{
-                                          cursor: "pointer",
-                                          userSelect: "none",
-                                          margin: 1,
-                                          minHeight: 50,
-                                          backgroundColor: snapshot.isDragging
-                                            ? "#f6f2fd"
-                                            : "#fffefe",
-                                          ...provided.draggableProps.style,
-                                        }}
-                                        onClick={() => updateItemModal(item.id)}
-                                      >
-                                        <ItemContent item={item} isSmall />
-                                      </Card>
-                                    );
-                                  }}
-                                </Draggable>
-                              );
-                            })}
-                            {provided.placeholder}
-                          </Paper>
-                        </Grid>
+                        <DragItem
+                          key={item.id}
+                          updateItemModal={updateItemModal}
+                          item={item}
+                          index={idx}
+                        />
                       );
-                    }}
-                  </Droppable>
+                    })}
+                  </Column>
                 );
               })}
           </DragDropContext>
