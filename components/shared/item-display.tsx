@@ -16,7 +16,7 @@ import { Typography } from "@mui/material";
 import ConfirmationModal from "../board/confirm-delete";
 import { Item, Priority, ItemStatus, Label, User } from "../../api/models";
 import { labelPrettify } from "../../utils/shared";
-import { getDate } from "../../utils/item-display-utils";
+import { getDate, getItemStatusOptions } from "../../utils/item-display-utils";
 
 interface ItemDisplayProps {
   item: Item;
@@ -78,18 +78,6 @@ const itemReducer = (state: State, action: Action): State => {
 
 const baseError = { title: false, user: false, label: false };
 
-const getItemStatusOptions = (isArchived: boolean) => {
-  if (isArchived) {
-    return Object.values(ItemStatus).filter(
-      (status) => status === ItemStatus.ARCHIVE
-    );
-  } else {
-    return Object.values(ItemStatus).filter(
-      (status) => status !== ItemStatus.ARCHIVE
-    );
-  }
-};
-
 export default function ItemDisplay({
   item,
   handleClose,
@@ -112,7 +100,7 @@ export default function ItemDisplay({
   const isArchived = item.itemStatus === ItemStatus.ARCHIVE;
   const isDisabled = isArchived || isComplete;
 
-  const itemStatusOptions = getItemStatusOptions(isArchived);
+  const itemStatusOptions = getItemStatusOptions(isArchived, item);
 
   const handleSubmit = () => {
     const { user, title, label } = itemState.item;

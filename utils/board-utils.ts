@@ -70,17 +70,28 @@ export const dropChecker = (currentColumn: ItemStatus, dragId?: ItemStatus) => {
   if (currentColumn === dragId) return false;
   switch (dragId) {
     case ItemStatus.BACKLOG:
-      return currentColumn !== ItemStatus.IN_PROGRESS;
+      return [
+        ItemStatus.BLOCKED,
+        ItemStatus.IN_REVIEW,
+        ItemStatus.COMPLETE,
+        ItemStatus.ARCHIVE,
+      ].includes(currentColumn);
     case ItemStatus.IN_PROGRESS:
-      return [ItemStatus.COMPLETE].includes(currentColumn);
+      return [ItemStatus.COMPLETE, ItemStatus.ARCHIVE].includes(currentColumn);
     case ItemStatus.BLOCKED:
-      return [ItemStatus.IN_REVIEW, ItemStatus.COMPLETE].includes(
-        currentColumn
-      );
+      return [
+        ItemStatus.IN_REVIEW,
+        ItemStatus.COMPLETE,
+        ItemStatus.ARCHIVE,
+      ].includes(currentColumn);
     case ItemStatus.IN_REVIEW:
-      return [ItemStatus.BACKLOG].includes(currentColumn);
+      return [ItemStatus.BACKLOG, ItemStatus.ARCHIVE].includes(currentColumn);
     case ItemStatus.COMPLETE:
-      return [ItemStatus.IN_REVIEW, ItemStatus.BLOCKED].includes(currentColumn);
+      return [
+        ItemStatus.IN_REVIEW,
+        ItemStatus.BLOCKED,
+        ItemStatus.ARCHIVE,
+      ].includes(currentColumn);
     default:
       return false;
   }
