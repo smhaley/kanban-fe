@@ -24,7 +24,7 @@ export const instantiateCols = (resp: Item[]) => {
   return baseState;
 };
 
-export const onDragEnd = (
+export const dragEndHandler = (
   result: DropResult,
   setColumns: React.Dispatch<React.SetStateAction<ColType | undefined>>,
   columns?: ColType
@@ -63,5 +63,25 @@ export const onDragEnd = (
     });
     copiedItems.forEach((item, index) => (item.position = index));
     ItemsService.batchPutItems(copiedItems);
+  }
+};
+
+export const dropChecker = (currentColumn: ItemStatus, dragId?: ItemStatus) => {
+  if (currentColumn === dragId) return false;
+  switch (dragId) {
+    case ItemStatus.BACKLOG:
+      return currentColumn !== ItemStatus.IN_PROGRESS;
+    case ItemStatus.IN_PROGRESS:
+      return [ItemStatus.COMPLETE].includes(currentColumn);
+    case ItemStatus.BLOCKED:
+      return [ItemStatus.IN_REVIEW, ItemStatus.COMPLETE].includes(
+        currentColumn
+      );
+    case ItemStatus.IN_REVIEW:
+      return [ItemStatus.BACKLOG].includes(currentColumn);
+    case ItemStatus.COMPLETE:
+      return [ItemStatus.IN_REVIEW, ItemStatus.BLOCKED].includes(currentColumn);
+    default:
+      return false;
   }
 };

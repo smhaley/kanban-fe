@@ -3,15 +3,16 @@ import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import { DragDropContext } from "react-beautiful-dnd";
 import Modal from "./modal";
-import { Item, User, Label } from "../../api/models";
+import { Item, User, Label, ItemStatus } from "../../api/models";
 import * as ItemsService from "../../api/item_service";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 import { emptyItem } from "../../constants/board-constants";
-import { instantiateCols, onDragEnd } from "../../utils/board-utils";
+import { instantiateCols, dragEndHandler } from "../../utils/board-utils";
 import ItemDisplay from "../shared/item-display";
 import DragItem from "./drag-item";
 import Column from "./column";
+import { DragStart, DropResult } from "react-beautiful-dnd";
 
 export interface ColType {
   [x: string]: Item[];
@@ -28,6 +29,7 @@ export default function Board({ labels, users }: BoardProps) {
   const [modalState, setModalState] = useState(false);
   const [isNew, setIsNew] = useState(false);
   const [currentItem, setCurrentItem] = useState<Item>(emptyItem);
+  const [currentDragId, setCurrentDragId] = useState<ItemStatus>();
 
   React.useEffect(() => {
     const getItems = async () => {
@@ -97,6 +99,14 @@ export default function Board({ labels, users }: BoardProps) {
     setCurrentItem(itemToUpdate);
   };
 
+  const onDragStart = (start: DragStart) => {
+    setCurrentDragId(start.source.droppableId as ItemStatus);
+  };
+
+  const onDragEnd = (result: DropResult) => {
+    setCurrentDragId(undefined);
+    dragEndHandler(result, setColumns, columns);
+  };
   return (
     <Box
       sx={{
@@ -111,13 +121,15 @@ export default function Board({ labels, users }: BoardProps) {
           </Button>
         </Box>
         <Grid sx={{ flexGrow: 1 }} container spacing={1}>
-          <DragDropContext
-            onDragEnd={(result) => onDragEnd(result, setColumns, columns)}
-          >
+          <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
             {columns &&
               Object.entries(columns).map(([columnId, column]) => {
                 return (
-                  <Column key={columnId} columnId={columnId}>
+                  <Column
+                    key={columnId}
+                    columnId={columnId as ItemStatus}
+                    currentDragId={currentDragId}
+                  >
                     {column.map((item, idx) => {
                       return (
                         <DragItem

@@ -342,7 +342,7 @@ export default function ItemDisplay({
                 aria-label="minimum height"
                 minRows={8}
                 minLength={6}
-                maxRows={15}
+                maxRows={10}
                 placeholder="Task details"
                 disabled={isDisabled}
                 style={{ width: "100%" }}

@@ -3,7 +3,7 @@ import { green } from '@mui/material/colors';
 import { purple } from '@mui/material/colors';
 const theme = createTheme({
   palette: {
-    primary: { main: purple[500] }, // Purple and green play nicely together.
+    primary: { main: purple[500] },
     secondary: {
       main: green[500],
     },
