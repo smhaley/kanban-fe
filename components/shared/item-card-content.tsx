@@ -15,7 +15,9 @@ export default function ItemContent({ item, isSmall }: ItemContentProps) {
   const chipSize = isSmall ? "small" : "medium";
   return (
     <>
-      <Typography sx={{ fontSize: isSmall ? 16 : 18, pl: 3, pt: 2 }}>
+      <Typography
+        sx={{ fontSize: isSmall ? 14 : 18, pl: 3, pt: 2, lineHeight: 1.25 }}
+      >
         {item.title}
       </Typography>
       <CardContent>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Grid from "@mui/material/Grid";
+import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
 import { DragDropContext } from "react-beautiful-dnd";
 import Modal from "./modal";
@@ -115,11 +116,15 @@ export default function Board({ labels, users }: BoardProps) {
       }}
     >
       <Box>
-        <Box sx={{ mt: -3, maxWidth: 250, top: 0 }}>
-          <Button startIcon={<AddIcon />} onClick={newItemModal}>
-            New Task
-          </Button>
-        </Box>
+        {items ? (
+          <Box sx={{ mt: -3, maxWidth: 250, top: 0 }}>
+            <Button startIcon={<AddIcon />} onClick={newItemModal}>
+              New Task
+            </Button>
+          </Box>
+        ) : (
+          <LinearProgress color="secondary" />
+        )}
         <Grid sx={{ flexGrow: 1 }} container spacing={1}>
           <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
             {columns &&
