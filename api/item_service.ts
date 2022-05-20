@@ -1,17 +1,16 @@
 import { get, post, put, del } from "./api";
 import { Item } from "./models";
 
-export const getItems = () => {
-  return get<Item[]>("/kanbanItems");
+export const getItems = (serverSide?: boolean) => {
+  return get<Item[]>("/kanbanItems", serverSide);
 };
 
-
-export const getItem = (id: string) => {
+export const getItem = (id: string, serverSide?: boolean) => {
   return get<Item>(`/kanbanItem/${id}`);
 };
 
-export const getArchivedItems = () => {
-  return get<Item[]>(`/archivedKanbanItems`);
+export const getArchivedItems = (serverSide?: boolean) => {
+  return get<Item[]>(`/archivedKanbanItems`, serverSide);
 };
 
 export const batchPutItems = (data: Item[]) => {

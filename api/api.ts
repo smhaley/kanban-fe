@@ -1,4 +1,7 @@
-import axios, { AxiosRequestConfig } from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+
+const serverSideDomain =
+  process.env.NODE_ENV === "production" ? process.env.DOCKER_API : "localhost";
 
 const headers: Readonly<Record<string, string | boolean>> = {
   Accept: "application/json",
@@ -11,15 +14,28 @@ const http = axios.create({
   headers,
 });
 
-export async function get<T>(url: string, config?: AxiosRequestConfig) {
+const ssHttp = axios.create({
+  baseURL: `http://${serverSideDomain}:8080/api/v1`,
+  headers,
+});
+
+export async function get<T>(
+  url: string,
+  serverSide?: boolean,
+  config?: AxiosRequestConfig
+) {
   try {
-    const resp = await http.get<T>(url, config);
+    let resp: AxiosResponse<T, any>;
+    if (serverSide) {
+      resp = await ssHttp.get<T>(url, config);
+    } else {
+      resp = await http.get<T>(url, config);
+    }
     return await resp.data;
   } catch (e) {
     return Promise.reject(e);
   }
 }
-
 
 export async function post<T>(
   url: string,

@@ -21,7 +21,7 @@ const StyledCard = styled(Card)`
 `;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const archivedItems = await ItemService.getArchivedItems();
+  const archivedItems = await ItemService.getArchivedItems(true);
 
   if (!archivedItems) {
     return {

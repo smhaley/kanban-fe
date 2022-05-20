@@ -9,8 +9,8 @@ import { User, Label } from "../api/models";
 import { GetServerSideProps } from "next";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const users = await UserService.getUsers();
-  const labels = await LabelService.getLabels();
+  const users = await UserService.getUsers(true);
+  const labels = await LabelService.getLabels(true);
   if (!users || !labels) {
     return {
       notFound: true,

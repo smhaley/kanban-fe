@@ -1,8 +1,8 @@
 import { get, post, put, del } from "./api";
 import { Label } from "./models";
 
-export const getLabels = async () => {
-  return await get<Label[]>("/label");
+export const getLabels = async (serverSide?: boolean) => {
+  return await get<Label[]>("/label", serverSide);
 };
 
 export const addLabel = async (data: Label) => {
@@ -16,4 +16,3 @@ export const updateLabel = async (data: Label) => {
 export const deleteLabel = async (id: number) => {
   return await del(`/label/${id}`);
 };
-

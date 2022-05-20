@@ -7,16 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Link from "next/link";
-
-import styled from "@emotion/styled";
-
-const StyledMenuItem = styled(MenuItem)`
-  a {
-    text-decoration: none;
-    color: #000;
-  }
-`;
+import Router from "next/router";
 
 export default function ButtonAppBar() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -25,6 +16,11 @@ export default function ButtonAppBar() {
     setAnchorEl(event.currentTarget);
   };
   const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleMenuClick = (route: string) => {
+    Router.push(route);
     setAnchorEl(null);
   };
 
@@ -52,15 +48,13 @@ export default function ButtonAppBar() {
                 "aria-labelledby": "basic-button",
               }}
             >
-              <StyledMenuItem onClick={handleClose}>
-                <Link href="/">Home</Link>
-              </StyledMenuItem>
-              <StyledMenuItem onClick={handleClose}>
-                <Link href="/admin">Admin</Link>
-              </StyledMenuItem>
-              <StyledMenuItem onClick={handleClose}>
-                <Link href="/archive">Archive</Link>
-              </StyledMenuItem>
+              <MenuItem onClick={() => handleMenuClick("/")}>Home</MenuItem>
+              <MenuItem onClick={() => handleMenuClick("/admin")}>
+                Admin
+              </MenuItem>
+              <MenuItem onClick={() => handleMenuClick("/archive")}>
+                Archive
+              </MenuItem>
             </Menu>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               Shawnban 2000

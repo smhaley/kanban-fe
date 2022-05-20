@@ -1,8 +1,8 @@
 import { get, post, put, del } from "./api";
 import { User } from "./models";
 
-export const getUsers = async () => {
-  return await get<User[]>("/user");
+export const getUsers = async (serverSide?: boolean) => {
+  return await get<User[]>("/user", serverSide);
 };
 
 export const addUser = async (data: User) => {
@@ -16,4 +16,3 @@ export const updateUser = async (data: User) => {
 export const deleteUser = async (id: number) => {
   return await del(`/user/${id}`);
 };
-

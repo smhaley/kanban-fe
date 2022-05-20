@@ -16,7 +16,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   try {
     if (context.params && context.params.id) {
-      item = await ItemService.getItem(context.params.id as string);
+      item = await ItemService.getItem(context.params.id as string, true);
     }
   } catch (e) {
     return {
