@@ -33,6 +33,7 @@ export default function Board({ labels, users }: BoardProps) {
   const [isNew, setIsNew] = useState(false);
   const [currentItem, setCurrentItem] = useState<Item>(emptyItem);
   const [currentDragId, setCurrentDragId] = useState<ItemStatus>();
+  const [localFilters, setLocalFilters] = useState<FilterState>();
 
   React.useEffect(() => {
     const getItems = async () => {
@@ -43,7 +44,16 @@ export default function Board({ labels, users }: BoardProps) {
         console.log(error);
       }
     };
-    getItems();
+
+    const prevFilters = localStorage.getItem("filterState");
+
+    if (prevFilters) {
+      const parsedFilters: FilterState = JSON.parse(prevFilters);
+      setLocalFilters(parsedFilters);
+      applyFilters(parsedFilters);
+    } else {
+      getItems();
+    }
   }, []);
 
   React.useEffect(() => {
@@ -111,7 +121,9 @@ export default function Board({ labels, users }: BoardProps) {
     dragEndHandler(result, setColumns, columns);
   };
 
-  const applyFilters = async (queryString: string) => {
+  const applyFilters = async (filterState: FilterState) => {
+    const { users, labels, priorities } = filterState;
+    const queryString = `?users=${users.toString()}&labels=${labels.toString()}&priorities=${priorities.toString()}`;
     const filteredItems = await ItemsService.getItems(false, queryString);
     setItems(filteredItems);
   };
@@ -138,7 +150,13 @@ export default function Board({ labels, users }: BoardProps) {
             >
               New Task
             </Button>
-            <Filter users={users} labels={labels} applyFilters = {applyFilters} clearFilters={clearFilters} />
+            <Filter
+              users={users}
+              labels={labels}
+              applyFilters={applyFilters}
+              clearFilters={clearFilters}
+              localFilters={localFilters}
+            />
           </Box>
         ) : (
           <LinearProgress color="secondary" />

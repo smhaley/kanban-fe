@@ -12,8 +12,9 @@ import Button from "@mui/material/Button";
 interface FilterProps {
   users: User[];
   labels: Label[];
-  applyFilters: (queryString: string) => void;
+  applyFilters: (filterState: FilterState) => void;
   clearFilters: () => void;
+  localFilters: FilterState | undefined;
 }
 
 export type FilterState = {
@@ -49,15 +50,22 @@ const filterReducer = (state: FilterState, action: Action): FilterState => {
   }
 };
 
+const isFiltered = (filterState: FilterState) => {
+  const { users, labels, priorities } = filterState;
+  return labels.length || priorities.length || users.length;
+};
+
 export default function Filter({
   labels,
   users,
   applyFilters,
   clearFilters,
+  localFilters,
 }: FilterProps) {
+
   const [filterState, filterDispatch] = React.useReducer(
     filterReducer,
-    nullFilters
+    localFilters ? localFilters : nullFilters
   );
   const user = users.map((user) => user.username);
   const label = labels.map((label) => label.label);
@@ -69,21 +77,18 @@ export default function Filter({
       filterDispatch({ type: actionType, payload: vals });
 
   const handleApplyFilters = () => {
-    const { users, labels, priorities } = filterState;
-
-    if (labels.length || priorities.length || users.length) {
-      applyFilters(
-        `?users=${users.toString()}&labels=${labels.toString()}&priorities=${priorities.toString()}`
-      );
+    if (isFiltered(filterState)) {
+      applyFilters(filterState);
     }
+    localStorage.setItem("filterState", JSON.stringify(filterState));
   };
 
   const handleClearFilters = () => {
-    const { users, labels, priorities } = filterState;
-    if (labels.length || priorities.length || users.length) {
+    if (isFiltered(filterState)) {
       filterDispatch({ type: "clear_all" });
       clearFilters();
     }
+    localStorage.setItem("filterState", JSON.stringify(filterState));
   };
 
   return (
@@ -94,7 +99,7 @@ export default function Filter({
           aria-controls="panel1a-content"
           id="panel1a-header"
         >
-          <Typography>Filters</Typography>
+          <Typography color="warning">Filters</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <div>
