@@ -4,7 +4,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
 import { DragDropContext } from "react-beautiful-dnd";
 import Modal from "./modal";
-import { Item, User, Label, ItemStatus } from "../../api/models";
+import { Item, User, Label, ItemStatus, Priority } from "../../api/models";
 import * as ItemsService from "../../api/item_service";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
@@ -14,6 +14,8 @@ import ItemDisplay from "../shared/item-display";
 import DragItem from "./drag-item";
 import Column from "./column";
 import { DragStart, DropResult } from "react-beautiful-dnd";
+import Filter from "./filter";
+import { FilterState } from "./filter";
 
 export interface ColType {
   [x: string]: Item[];
@@ -108,6 +110,17 @@ export default function Board({ labels, users }: BoardProps) {
     setCurrentDragId(undefined);
     dragEndHandler(result, setColumns, columns);
   };
+
+  const applyFilters = async (queryString: string) => {
+    const filteredItems = await ItemsService.getItems(false, queryString);
+    setItems(filteredItems);
+  };
+
+  const clearFilters = async () => {
+    const items = await ItemsService.getItems(false);
+    setItems(items);
+  };
+
   return (
     <Box
       sx={{
@@ -117,10 +130,15 @@ export default function Board({ labels, users }: BoardProps) {
     >
       <Box>
         {items ? (
-          <Box sx={{ mt: -3, maxWidth: 250, top: 0 }}>
-            <Button startIcon={<AddIcon />} onClick={newItemModal}>
+          <Box sx={{ mt: -3, top: 0 }}>
+            <Button
+              color="secondary"
+              startIcon={<AddIcon />}
+              onClick={newItemModal}
+            >
               New Task
             </Button>
+            <Filter users={users} labels={labels} applyFilters = {applyFilters} clearFilters={clearFilters} />
           </Box>
         ) : (
           <LinearProgress color="secondary" />

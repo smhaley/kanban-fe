@@ -10,7 +10,7 @@ const headers: Readonly<Record<string, string | boolean>> = {
 };
 
 const http = axios.create({
-  baseURL: "http://localhost:8080/api/v1",
+  baseURL: `http://localhost:8080/api/v1`,
   headers,
 });
 

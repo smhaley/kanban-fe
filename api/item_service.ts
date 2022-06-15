@@ -1,12 +1,15 @@
 import { get, post, put, del } from "./api";
 import { Item } from "./models";
 
-export const getItems = (serverSide?: boolean) => {
-  return get<Item[]>("/kanbanItems", serverSide);
+export const getItems = (serverSide?: boolean, queryString?: string) => {
+  const service = "/kanbanItems";
+  const endpoint = queryString ? service + queryString : service;
+
+  return get<Item[]>(endpoint, serverSide);
 };
 
 export const getItem = (id: string, serverSide?: boolean) => {
-  return get<Item>(`/kanbanItem/${id}`);
+  return get<Item>(`/kanbanItem/${id}`, serverSide);
 };
 
 export const getArchivedItems = (serverSide?: boolean) => {
