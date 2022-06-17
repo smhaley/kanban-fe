@@ -7,6 +7,7 @@ import Select, { SelectChangeEvent } from "@mui/material/Select";
 import Chip from "@mui/material/Chip";
 import { Theme, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import { labelPrettify } from "../../utils/shared";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -71,7 +72,7 @@ export default function FilterSelect({
         renderValue={(selected) => (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
             {selected.map((value) => (
-              <Chip key={value} size="small" label={value} />
+              <Chip key={value} size="small" label={labelPrettify(value)} />
             ))}
           </Box>
         )}
@@ -83,7 +84,7 @@ export default function FilterSelect({
             value={value}
             style={getStyles(value, selectedValues, theme)}
           >
-            {value}
+            {labelPrettify(value)}
           </MenuItem>
         ))}
       </Select>

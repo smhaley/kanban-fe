@@ -14,8 +14,8 @@ import ItemDisplay from "../shared/item-display";
 import DragItem from "./drag-item";
 import Column from "./column";
 import { DragStart, DropResult } from "react-beautiful-dnd";
-import Filter from "./filter";
-import { FilterState } from "./filter";
+import Filter from "../filter/filter";
+import { FilterState } from "../filter/filter";
 
 export interface ColType {
   [x: string]: Item[];
@@ -34,6 +34,7 @@ export default function Board({ labels, users }: BoardProps) {
   const [currentItem, setCurrentItem] = useState<Item>(emptyItem);
   const [currentDragId, setCurrentDragId] = useState<ItemStatus>();
   const [localFilters, setLocalFilters] = useState<FilterState>();
+  const [isFiltered, setIsFiltered] = useState(false);
 
   React.useEffect(() => {
     const getItems = async () => {
@@ -126,11 +127,17 @@ export default function Board({ labels, users }: BoardProps) {
     const queryString = `?users=${users.toString()}&labels=${labels.toString()}&priorities=${priorities.toString()}`;
     const filteredItems = await ItemsService.getItems(false, queryString);
     setItems(filteredItems);
+    if (users.length || labels.length || priorities.length) {
+      setIsFiltered(true);
+    } else {
+      setIsFiltered(false);
+    }
   };
 
   const clearFilters = async () => {
     const items = await ItemsService.getItems(false);
     setItems(items);
+    setIsFiltered(false);
   };
 
   return (
@@ -156,6 +163,7 @@ export default function Board({ labels, users }: BoardProps) {
               applyFilters={applyFilters}
               clearFilters={clearFilters}
               localFilters={localFilters}
+              isFiltered={isFiltered}
             />
           </Box>
         ) : (

@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
 import { Priority, User, Label } from "../../api/models";
-import FilterSelect from "../filter-select";
+import FilterSelect from "./filter-select";
 import Button from "@mui/material/Button";
 
 interface FilterProps {
@@ -15,6 +15,7 @@ interface FilterProps {
   applyFilters: (filterState: FilterState) => void;
   clearFilters: () => void;
   localFilters: FilterState | undefined;
+  isFiltered: boolean;
 }
 
 export type FilterState = {
@@ -50,7 +51,7 @@ const filterReducer = (state: FilterState, action: Action): FilterState => {
   }
 };
 
-const isFiltered = (filterState: FilterState) => {
+const isLocalFiltered = (filterState: FilterState) => {
   const { users, labels, priorities } = filterState;
   return labels.length || priorities.length || users.length;
 };
@@ -61,8 +62,8 @@ export default function Filter({
   applyFilters,
   clearFilters,
   localFilters,
+  isFiltered,
 }: FilterProps) {
-
   const [filterState, filterDispatch] = React.useReducer(
     filterReducer,
     localFilters ? localFilters : nullFilters
@@ -77,14 +78,14 @@ export default function Filter({
       filterDispatch({ type: actionType, payload: vals });
 
   const handleApplyFilters = () => {
-    if (isFiltered(filterState)) {
+    if (isLocalFiltered(filterState) || isFiltered) {
       applyFilters(filterState);
     }
     localStorage.setItem("filterState", JSON.stringify(filterState));
   };
 
   const handleClearFilters = () => {
-    if (isFiltered(filterState)) {
+    if (isLocalFiltered(filterState) || isFiltered) {
       filterDispatch({ type: "clear_all" });
       clearFilters();
     }
@@ -99,7 +100,15 @@ export default function Filter({
           aria-controls="panel1a-content"
           id="panel1a-header"
         >
-          <Typography color="warning">Filters</Typography>
+          <Typography>
+            {isFiltered ? (
+              <>
+                <b>Filtered:</b> Expand to see current selections
+              </>
+            ) : (
+              "Filter"
+            )}
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>
           <div>
